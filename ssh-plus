@@ -72,7 +72,7 @@ fi
 
 echo -e "${CYAN}[6/10]${NC} Preparando repositorio..."
 if [ -d "$INSTALL_DIR" ]; then rm -rf "$INSTALL_DIR"; fi
-REPO_URL="https://github.com/Jbmb4/MB4Core.git"
+REPO_URL="https://github.com/Jbmb4/DTMod2.git"
 REPO_BRANCH="main"
 git clone --branch "$REPO_BRANCH" --single-branch "$REPO_URL" "$INSTALL_DIR"
 cd "$INSTALL_DIR" || exit 1

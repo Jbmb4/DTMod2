@@ -18,6 +18,7 @@
 - [x] Adicionado modo HYSTERIA, SSH_DNSTT
 - [x] Adicionado gerenciador simples de versões
 - [x] Adicionado runtime integrado para `SSH_XHTTP`, com validação de base APK e geração assinada
+- [x] Gerenciamento de backup com envio automático ao Telegram a cada 2 horas
 
 ## SSH_XHTTP
 
@@ -82,6 +83,10 @@ pnpm build
 ```bash
 pnpm start
 ```
+
+### Gerenciamento de backup
+
+O instalador padrão já inclui a página **Gerenciamento de backup** no painel administrativo. Depois de entrar como administrador, informe o token do bot do Telegram e o ID do seu chat, ative o backup automático e salve. A configuração é criada automaticamente na inicialização do painel; não é necessário executar um comando separado de backup.
 
 ### Atualização do painel no VPS
 
