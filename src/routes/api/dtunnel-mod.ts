@@ -37,7 +37,10 @@ export default {
 
     if (headers.data.password == password) {
       if (['app_config', 'app_layout'].includes(headers.data['dtunnel-update'])) {
-        return reply.send(response.map((data: any) => JSON.parse(data)));
+        const parsedResponse = Array.isArray(response)
+          ? response.map((data: any) => (typeof data === 'string' ? JSON.parse(data) : data))
+          : response;
+        return reply.send(parsedResponse);
       }
       return reply.send(response);
     }
