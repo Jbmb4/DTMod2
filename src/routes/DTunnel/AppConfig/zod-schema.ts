@@ -12,6 +12,7 @@ const mode = z.enum([
   'V2RAY',
   'HYSTERIA',
   'SSH_XHTTP',
+  'SSH_HCR',
 ]);
 
 export const CategorySchema = z.object({
@@ -77,8 +78,7 @@ export const AppConfigSchema = z.object({
   hy_up_mbps: z.number().optional().nullable(),
   hy_down_mbps: z.number().optional().nullable(),
   hy_version: z.number().optional().nullable(),
-  // NONE is valid only for SSH_XHTTP and is translated by the embedded XHTTP runtime
-  // to a plaintext HTTP stream. Existing TLS modes continue using the TLS values.
+  // NONE is used by plain transports such as SSH_XHTTP or SSH_HCR.
   tls_version: z.enum(['TLSv1.3', 'TLSv1.2', 'TLSv1.1', 'NONE']).optional().nullable(),
   udp_ports: z.array(z.number()).optional().nullable(),
   url_check_user: z.string(),

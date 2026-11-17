@@ -12,6 +12,7 @@ const Mode = {
     V2RAY: 'V2RAY',
     HYSTERIA: 'HYSTERIA',
     SSH_XHTTP: 'SSH_XHTTP',
+    SSH_HCR: 'SSH_HCR',
 }
 
 const Status = {
