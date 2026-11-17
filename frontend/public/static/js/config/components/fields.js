@@ -273,6 +273,42 @@ export class ConfigUseTlsXhttp {
     }
 }
 
+export class ConfigUsePayloadHcr {
+    constructor(usePayload = false) {
+        this._element = document.createElement('div')
+        this._element.classList.add('form-check', 'form-switch', 'mb-2')
+
+        this._checkbox = document.createElement('input')
+        this._checkbox.classList.add('form-check-input')
+        this._checkbox.type = 'checkbox'
+        this._checkbox.id = 'usePayloadHcr'
+        this._checkbox.checked = usePayload
+
+        this._label = document.createElement('label')
+        this._label.classList.add('form-check-label', 'ms-2')
+        this._label.htmlFor = 'usePayloadHcr'
+        this._label.innerText = 'Com Payload no SSH_HCR'
+
+        this._element.appendChild(this._checkbox)
+        this._element.appendChild(this._label)
+    }
+
+    getValue() {
+        return this._checkbox.checked
+    }
+
+    render() {
+        const div = document.createElement('div')
+        div.classList.add('d-flex', 'flex-column', 'w-100')
+        div.appendChild(this._element)
+        return div
+    }
+
+    setOnChange(callback) {
+        this._checkbox.addEventListener('change', () => callback(this.getValue()))
+    }
+}
+
 export class ConfigOpenVPN extends TextAreaFiled {
     constructor(payload) {
         super()

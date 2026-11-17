@@ -8,7 +8,7 @@ import {
     ConfigUrlCheckUser, ConfigUsername, ConfigUuid, ConfigV2ray, InputFiled,
     ConfigHyPort, ConfigHyObfs, ConfigHyInsecure, ConfigHyUpMbps, ConfigHyDownMbps, ConfigHyVersion,
     ConfigDnsttKey, ConfigDnsttNameServer, ConfigDnsttServer,
-    ConfigXhttpHost, ConfigXhttpPath, ConfigUseTlsXhttp
+    ConfigXhttpHost, ConfigXhttpPath, ConfigUseTlsXhttp, ConfigUsePayloadHcr
 } from "./fields.js"
 
 class ConfigForm {
@@ -202,6 +202,8 @@ class ConfigFormSshHcr extends ConfigForm {
         this.server = new ConfigServer(config?.server?.host || '')
         this.serverPort = new ConfigPort(config?.server?.port || 8080)
         this.sni = new ConfigSni(config?.config_payload?.sni || '', true)
+        this.payload = new ConfigPayload(config?.config_payload?.payload || '')
+        this.usePayload = new ConfigUsePayloadHcr(Boolean(config?.config_payload?.payload))
         this.dns1 = new ConfigDns1(config?.dns_server?.dns1 || '8.8.8.8')
         this.dns2 = new ConfigDns2(config?.dns_server?.dns2 || '8.8.4.4')
         this.username = new ConfigUsername(config?.auth?.username || '')
@@ -209,11 +211,24 @@ class ConfigFormSshHcr extends ConfigForm {
         this.tlsVersion = new ConfigTlsVersion(['TLSv1.3', 'TLSv1.2', 'TLSv1.1', 'NONE'])
         this.tlsVersion.setSelected(config.tls_version || 'NONE')
         this.udpPort = new ConfigUdpPort(config.udp_ports || 7300)
+        this.setPayloadVisibility = () => {
+            if (this.payload._element.parentElement) {
+                this.payload._element.parentElement.style.display = this.usePayload.getValue() ? '' : 'none'
+            }
+        }
+        this.usePayload.setOnChange(this.setPayloadVisibility)
+        const originalPayloadValidate = this.payload.validate.bind(this.payload)
+        this.payload.validate = () => {
+            if (this.usePayload.getValue()) originalPayloadValidate()
+        }
     }
 
     toConfig() {
         const config = super.toConfig()
-        config.config_payload = { sni: this.sni.getValue() }
+        config.config_payload = {
+            sni: this.sni.getValue(),
+            payload: this.usePayload.getValue() ? this.payload.getValue() : '',
+        }
         config.server = { host: this.server.getValue(), port: this.serverPort.getValue() }
         config.dns_server = { dns1: this.dns1.getValue(), dns2: this.dns2.getValue() }
         config.auth = { username: this.username.getValue(), password: this.password.getValue() }
@@ -226,9 +241,12 @@ class ConfigFormSshHcr extends ConfigForm {
         const element = super.render()
         element.insertBefore(this.createDivWithClass(this.server.render(), this.serverPort.render()), element.childNodes[3])
         element.insertBefore(this.createDivWithClass(this.sni.render(), this.tlsVersion.render()), element.childNodes[4])
-        element.insertBefore(this.createDivWithClass(this.username.render(), this.password.render()), element.childNodes[5])
-        element.insertBefore(this.createDivWithClass(this.dns1.render(), this.dns2.render()), element.childNodes[6])
-        element.insertBefore(this.udpPort.render(), element.childNodes[7])
+        element.insertBefore(this.usePayload.render(), element.childNodes[5])
+        element.insertBefore(this.payload.render(), element.childNodes[6])
+        element.insertBefore(this.createDivWithClass(this.username.render(), this.password.render()), element.childNodes[7])
+        element.insertBefore(this.createDivWithClass(this.dns1.render(), this.dns2.render()), element.childNodes[8])
+        element.insertBefore(this.udpPort.render(), element.childNodes[9])
+        this.setPayloadVisibility()
         return element
     }
 }
