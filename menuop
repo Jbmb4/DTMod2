@@ -109,7 +109,23 @@ while true; do
             ;;
         3)
             echo "Reiniciando painel..."
-            cd "$PANEL_DIR" && "$PANEL_DIR/pon"
+            if [ -z "$PM2_BIN" ]; then
+                echo -e "${RED}PM2 nao foi encontrado. Verifique a instalacao global do PM2.${NC}"
+            elif ! cd "$PANEL_DIR"; then
+                echo -e "${RED}Nao foi possivel acessar o diretorio do painel: $PANEL_DIR${NC}"
+            elif "$PM2_BIN" show DTunnel >/dev/null 2>&1; then
+                if "$PM2_BIN" restart DTunnel --update-env; then
+                    "$PM2_BIN" save
+                    echo -e "${GREEN}Painel reiniciado com sucesso.${NC}"
+                else
+                    echo -e "${RED}Falha ao reiniciar DTunnel. Confira: pm2 logs DTunnel${NC}"
+                fi
+            elif "$PM2_BIN" start ecosystem.config.js --cwd "$PANEL_DIR"; then
+                "$PM2_BIN" save
+                echo -e "${GREEN}Painel iniciado com sucesso.${NC}"
+            else
+                echo -e "${RED}Falha ao iniciar DTunnel. Confira: pm2 logs DTunnel${NC}"
+            fi
             sleep 2
             ;;
         4)
