@@ -90,13 +90,23 @@ O instalador padrão já inclui a página **Gerenciamento de backup** no painel 
 
 ### Atualização do painel no VPS
 
-O comando manual de atualização do VPS fica na pasta `/root/Dtmod`. Ele baixa `origin/main` com fast-forward, instala as dependências, regenera o Prisma Client, aplica migrações, compila o projeto e reinicia o processo correto do PM2. O comando não sobrescreve alterações locais:
+O comando manual de atualização do VPS fica na pasta `/root/Dtmod`. Ele baixa `origin/main` com fast-forward, instala as dependências, regenera o Prisma Client, aplica `migrate deploy` **somente se o intervalo trouxer um arquivo `migration.sql`**, compila o projeto e reinicia o processo correto do PM2. Sem alteração de schema/migrations, não toca no banco:
 
 ```bash
-cd /root/Dtmod && git fetch origin main && git merge --ff-only origin/main && install -m 0755 /root/Dtmod/menuop /usr/local/bin/menuop && pnpm install --frozen-lockfile && pnpm exec prisma generate && pnpm exec prisma migrate deploy && pnpm build && pm2 restart DTunnel --update-env
+cd /root/Dtmod
+OLD_COMMIT="$(git rev-parse HEAD)"
+git fetch origin main && git merge --ff-only origin/main && \
+install -m 0755 /root/Dtmod/menuop /usr/local/bin/menuop && \
+pnpm install --frozen-lockfile && pnpm exec prisma generate && \
+if git diff --name-only "$OLD_COMMIT" HEAD -- prisma/migrations | grep -qE '/migration\.sql$'; then
+  pnpm exec prisma migrate deploy
+else
+  echo 'Nenhuma migration SQL nova; banco inalterado.'
+fi && \
+pnpm build && pm2 restart DTunnel --update-env
 ```
 
-O `menuop` também oferece a opção **9. Atualizar painel pelo GitHub**. Ela verifica se o clone está limpo e na branch `main`, busca `origin/main`, pede confirmação, faz backup de `.env` e do banco SQLite local quando aplicável, atualiza em fast-forward, aplica migrações, compila e reinicia `DTunnel`. Alterações locais ou divergência de histórico interrompem o processo em vez de sobrescrever arquivos.
+O `menuop` também oferece a opção **9. Atualizar painel pelo GitHub**. Ela verifica se o clone está limpo e na branch `main`, busca `origin/main`, pede confirmação, faz backup de `.env` e do banco SQLite local quando aplicável, atualiza em fast-forward, aplica apenas migrations SQL alteradas, compila e reinicia `DTunnel`. Alterações locais ou divergência de histórico interrompem o processo em vez de sobrescrever arquivos. **P3005 não deve ser resolvido com baseline automático**: em banco legado, confirme o backup e compare o schema antes de qualquer `prisma migrate resolve`.
 
 ### Atualizações do aplicativo
 
@@ -124,11 +134,7 @@ Administradores podem abrir o menu **Mudar Gmail e senha** para alterar o Gmail 
 
 O painel aceita login somente pelo Gmail cadastrado. O nome de usuário continua sendo mantido como identificação interna e visual, mas não funciona como credencial de acesso. Novas contas criadas no painel devem receber um Gmail válido para entrar.
 
-Depois de publicar a alteração, use o fluxo padrão do VPS:
-
-```bash
-cd /root/Dtmod && git fetch origin && git reset --hard origin/main && pnpm install && pnpm exec prisma generate && pnpm build && pm2 restart DTunnel --update-env
-```
+Depois de publicar a alteração, use a opção **9. Atualizar painel pelo GitHub** do `menuop` ou o comando manual documentado acima. Evite `git reset --hard` em uma instalação de produção: ele pode descartar alterações locais.
 
 <br />
 

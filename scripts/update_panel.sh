@@ -41,7 +41,7 @@ fi
 
 say "Alterações que serão instaladas:"
 git -C "$PANEL_DIR" --no-pager log --oneline "$local_commit..$remote_commit"
-printf '\nEsta operação fará backup de .env e do banco SQLite local, atualizará dependências/migrações, compilará e reiniciará o painel.\n'
+printf '\nEsta operação fará backup de .env e do banco SQLite local, atualizará dependências, aplicará apenas migrations SQL novas, compilará e reiniciará o painel.\n'
 read -r -p "Continuar com a atualização? [s/N] " confirm
 [[ "$confirm" == "s" || "$confirm" == "S" ]] || { say "Atualização cancelada."; exit 0; }
 
@@ -100,8 +100,16 @@ if ! (cd "$PANEL_DIR" && pnpm install --frozen-lockfile && pnpm exec prisma gene
     fail "Falha na instalação/compilação. O código foi restaurado quando possível; confira os logs e o backup."
 fi
 
-if ! (cd "$PANEL_DIR" && pnpm exec prisma migrate deploy); then
-    fail "As migrações falharam. O código novo foi mantido e nenhum reset do banco foi feito. Confira o log e o backup em $backup_archive."
+changed_migrations="$(git -C "$PANEL_DIR" diff --name-only "$old_commit" "$remote_commit" -- prisma/migrations | grep -E '/migration\.sql$' || true)"
+schema_changed="$(git -C "$PANEL_DIR" diff --name-only "$old_commit" "$remote_commit" -- prisma/schema.prisma)"
+if [[ -n "$changed_migrations" ]]; then
+    if ! (cd "$PANEL_DIR" && pnpm exec prisma migrate deploy); then
+        fail "As migrations SQL falharam. Nenhum baseline/reset foi aplicado; o código novo foi mantido. Revise o schema, faça backup e confira $backup_archive."
+    fi
+elif [[ -n "$schema_changed" ]]; then
+    fail "prisma/schema.prisma mudou sem migration.sql correspondente. Nenhuma alteração de banco foi tentada; crie/revise a migration antes de atualizar."
+else
+    say "Nenhuma migration SQL/schema mudou neste update; ignorando migrate deploy (sem alteração no banco)."
 fi
 
 [[ -n "$PM2_BIN" && -x "$PM2_BIN" ]] || fail "A atualização compilou, mas PM2 não foi encontrado; reinicie DTunnel manualmente."
