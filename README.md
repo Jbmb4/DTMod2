@@ -90,11 +90,13 @@ O instalador padrão já inclui a página **Gerenciamento de backup** no painel 
 
 ### Atualização do painel no VPS
 
-O comando oficial de atualização do VPS fica na pasta `/root/Dtmod`. Ele sincroniza exatamente com `origin/main`, instala as dependências, regenera o Prisma Client, compila o projeto e reinicia o processo correto do PM2:
+O comando manual de atualização do VPS fica na pasta `/root/Dtmod`. Ele baixa `origin/main` com fast-forward, instala as dependências, regenera o Prisma Client, aplica migrações, compila o projeto e reinicia o processo correto do PM2. O comando não sobrescreve alterações locais:
 
 ```bash
-cd /root/Dtmod && git fetch origin && git reset --hard origin/main && pnpm install && pnpm exec prisma generate && pnpm build && pm2 restart DTunnel --update-env
+cd /root/Dtmod && git fetch origin main && git merge --ff-only origin/main && install -m 0755 /root/Dtmod/menuop /usr/local/bin/menuop && pnpm install --frozen-lockfile && pnpm exec prisma generate && pnpm exec prisma migrate deploy && pnpm build && pm2 restart DTunnel --update-env
 ```
+
+O `menuop` também oferece a opção **9. Atualizar painel pelo GitHub**. Ela verifica se o clone está limpo e na branch `main`, busca `origin/main`, pede confirmação, faz backup de `.env` e do banco SQLite local quando aplicável, atualiza em fast-forward, aplica migrações, compila e reinicia `DTunnel`. Alterações locais ou divergência de histórico interrompem o processo em vez de sobrescrever arquivos.
 
 ### Atualizações do aplicativo
 

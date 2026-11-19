@@ -73,6 +73,7 @@ show_menu() {
     [ -z "$CURRENT_PORT" ] && CURRENT_PORT="3000"
     echo -e "${CYAN}7.${NC} Configurar porta do painel ${YELLOW}(Atual: $CURRENT_PORT)${NC}"
     echo -e "${CYAN}8.${NC} Criar ou mudar Super ADM"
+    echo -e "${CYAN}9.${NC} Atualizar painel pelo GitHub"
     echo -e "${CYAN}0.${NC} Sair"
     echo ""
     echo -n -e "${GREEN}Escolha uma opcao: ${NC}"
@@ -302,6 +303,12 @@ PY
             echo -e "${CYAN}--- CRIAR OU ALTERAR SUPER ADMINISTRADOR ---${NC}"
             cd "$PANEL_DIR" && pnpm exec tsx scripts/update-admin-credentials.ts
             sleep 3
+            ;;
+        9)
+            echo -e "${CYAN}--- ATUALIZAR PAINEL PELO GITHUB ---${NC}"
+            DTMOD_INSTALL_DIR="$PANEL_DIR" PM2_BIN="$PM2_BIN" bash "$PANEL_DIR/scripts/update_panel.sh"
+            echo ""
+            read -r -p "Pressione Enter para voltar ao menu..." _
             ;;
         0)
             exit 0
