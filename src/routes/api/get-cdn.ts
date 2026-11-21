@@ -8,11 +8,10 @@ export default async function GetCdn(user_id: string) {
         user_id,
         status: 'ACTIVE',
       },
-      omit: {
-        user_id: true,
-        status: true,
+      select: {
+        url: true,
       },
     })
   );
-  return cdn ? cdn : [];
+  return cdn ? cdn.map(({ url }) => url) : [];
 }
