@@ -51,10 +51,13 @@ class ApkDownloadModal {
                         <label class="form-label small text-secondary">Versão Base</label>
                         <div class="btn-group w-100" role="group">
                             <input type="radio" class="btn-check" name="base_version" id="base_standard" value="standard" checked>
-                            <label class="btn btn-outline-primary" for="base_standard">Padrão</label>
+                            <label class="btn btn-outline-primary" for="base_standard">Padrão (SSH_HCR)</label>
                             
                             <input type="radio" class="btn-check" name="base_version" id="base_xhttp" value="xhttp">
                             <label class="btn btn-outline-primary" for="base_xhttp">XHTTP</label>
+                        </div>
+                        <div class="form-text text-warning small mt-2">
+                            Use a base Padrão para perfis <code>SSH_HCR</code>. A base XHTTP não inclui o runtime HCR.
                         </div>
                     </div>
 

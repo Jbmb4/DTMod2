@@ -13,6 +13,7 @@ import subprocess
 import sys
 import argparse
 import requests
+import zipfile
 from pathlib import Path
 from xml.sax.saxutils import escape as xml_escape
 try:
@@ -101,6 +102,28 @@ def verify_xhttp_runtime(work_dir: Path) -> None:
     if expected:
         details = ", ".join(f"{name}: recurso={values[0]}, campo={values[1]}" for name, values in expected.items())
         raise RuntimeError(f"IDs de recursos XHTTP inconsistentes; regenere a base-xhttp.apk ({details}).")
+
+def verify_hcr_base(apk_path: Path) -> None:
+    """Fail early if the standard base loses the native HCR runtime."""
+    try:
+        with zipfile.ZipFile(apk_path) as archive:
+            names = set(archive.namelist())
+    except (OSError, zipfile.BadZipFile) as error:
+        raise RuntimeError(f"Não foi possível verificar a base HCR: {error}") from error
+
+    required = {
+        "lib/arm64-v8a/libhcrjni.so",
+        "lib/armeabi-v7a/libhcrjni.so",
+        "classes4.dex",
+        "classes5.dex",
+        "classes6.dex",
+    }
+    missing = sorted(required - names)
+    if missing:
+        raise RuntimeError(
+            "A base padrão não contém o runtime SSH_HCR; arquivos ausentes: "
+            + ", ".join(missing)
+        )
 
 def replace_domains(work_dir: Path, new_domain: str) -> int:
     new_host = new_domain.split(":")[0]
@@ -453,6 +476,8 @@ def generate_apk(args: argparse.Namespace) -> Path:
 
     try:
         print(f"Decompilando APK base ({base_filename})...")
+        if not getattr(args, "xhttp", False):
+            verify_hcr_base(apk_path)
         run_command([*APKTOOL_CMD, "d", "-f", str(apk_path), "-o", str(work_dir)])
         if getattr(args, "xhttp", False):
             verify_xhttp_runtime(work_dir)
