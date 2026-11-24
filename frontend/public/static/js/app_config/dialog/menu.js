@@ -76,7 +76,8 @@ class DialogMenu extends AbsDialog {
 }
 
 class DialogMenuImpl {
-    constructor() {
+    constructor(onPrimaryColor = null) {
+        this.onPrimaryColor = onPrimaryColor;
         this.dialogDefault = new DialogDefault();
         this.dialogConfig = new DialogConfig();
         this.dialogLogger = new DialogLogger();
@@ -85,6 +86,14 @@ class DialogMenuImpl {
 
     __createItems() {
         return [
+            {
+                text: 'Cor principal',
+                icon: 'bi bi-palette',
+                fn: () => {
+                    this.dialogMenu.close();
+                    if (this.onPrimaryColor) this.onPrimaryColor();
+                }
+            },
             {
                 text: 'Dialog padrão',
                 icon: 'bi bi-chat',

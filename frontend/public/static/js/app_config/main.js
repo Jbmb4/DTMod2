@@ -124,7 +124,24 @@ const createIconsFooter = (config, list) => {
     customFooter.setOnClickSave(() => list.notify('update', config));
 
     customFooter.setOnMenuClick(() => {
-        const dialogMenu = new DialogMenuImpl(config);
+        const dialogMenu = new DialogMenuImpl(() => {
+            const picker = new DialogPicker(appAdvancedView.element, null);
+            const primaryColorFields = [
+                'APP_BUTTON_COLOR',
+                'APP_ICON_COLOR',
+                'APP_CARD_STATUS_COLOR',
+                'APP_CARD_CONFIG_COLOR',
+            ];
+            picker.setOnColorChange(color => {
+                primaryColorFields.forEach(name => {
+                    const field = config.get(name);
+                    if (field) field.value = color;
+                });
+                config.notify();
+            });
+            picker.setColor(config.app_button_color || config.app_card_status_color || config.app_icon_color);
+            picker.render();
+        });
         const dialogConfig = dialogMenu.dialogConfig;
         const dialogDefault = dialogMenu.dialogDefault;
         const dialogLogger = dialogMenu.dialogLogger;

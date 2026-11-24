@@ -25,9 +25,27 @@ export default class Iframe extends ComponentStyled {
 
     setIframContentHtmlStyle(style) {
         const content = this.element.contentDocument || this.element.contentWindow.document;
+        if (!content || !content.documentElement) return;
         Object.keys(style).forEach(key => {
-            content.documentElement.style[key] = style[key];
+            if (key.startsWith('--')) {
+                content.documentElement.style.setProperty(key, style[key], 'important');
+            } else {
+                content.documentElement.style[key] = style[key];
+            }
         })
+    }
+
+    setIframContentStyleSheet(id, cssText) {
+        const content = this.element.contentDocument || this.element.contentWindow.document;
+        if (!content || !content.head) return;
+
+        let style = content.getElementById(id);
+        if (!style) {
+            style = content.createElement('style');
+            style.id = id;
+            content.head.appendChild(style);
+        }
+        style.textContent = cssText;
     }
 
     setIframContentBodyStyle(style) {

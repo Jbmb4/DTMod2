@@ -77,6 +77,7 @@ export default class AppConfigView extends App {
                 overflow: 'hidden',
             })
             this.androidWebview.setIframContentBodyStyle({ height: '100%', width: '100%' })
+            this.syncPreviewColors(this.appConfig);
         })
 
         this.layoutWebview = new Iframe({
@@ -98,6 +99,7 @@ export default class AppConfigView extends App {
                 overflow: 'hidden',
             })
             this.layoutWebview.setIframContentBodyStyle({ height: '100%', width: '100%' })
+            this.syncPreviewColors(this.appConfig);
         })
 
         this.appConfig.observe(config => {
@@ -192,9 +194,52 @@ export default class AppConfigView extends App {
             this.buttonLogger.setStyle({ fill: config.app_text_color });
             this.buttonWebView.setStyle({ fill: config.app_text_color });
             this.buttonVpnStart.span.setStyle({ color: config.app_text_color });
+            this.syncPreviewColors(config);
         });
 
         this.render()
+    }
+
+    syncPreviewColors(config) {
+        const colors = {
+            '--bg-color': config.app_background_color || 'transparent',
+            '--button-color': config.app_button_color || 'transparent',
+            '--text-color': config.app_text_color || '#ffffff',
+            '--icon-color': config.app_icon_color || '#ffffff',
+            '--card-config': config.app_card_config_color || 'transparent',
+            '--card-color': config.app_card_color || 'transparent',
+            '--card-status-color': config.app_card_status_color || config.app_card_color || 'transparent',
+            '--input-color': config.app_input_color || 'transparent',
+            '--border-color': config.app_border_color || 'transparent',
+        };
+        const primaryColor = config.app_button_color || config.app_card_status_color || config.app_icon_color;
+        const primaryCss = `
+            :root { --app-primary-color: ${primaryColor}; --primary-color: ${primaryColor}; --main-color: ${primaryColor}; }
+            header, .header, .app-header, .top-header, .header-bar, .top-bar, .topbar, .toolbar {
+                background-color: var(--app-primary-color) !important;
+            }
+            .card.active, .card.selected, .category.active, .category.selected,
+            .item.active, .item.selected, .active-card, .selected-card,
+            nav .active, nav .selected, nav [aria-current="page"],
+            .bottom-nav .active, .bottom-navigation .active, .navigation-bar .active {
+                background-color: var(--app-primary-color) !important;
+            }
+            svg.icon, svg[class*="bi"], .icon, .bi, .app-icon, .category-icon, .nav-icon {
+                color: var(--app-primary-color) !important;
+                fill: var(--app-primary-color) !important;
+            }
+        `;
+
+        [this.androidWebview, this.layoutWebview].forEach((webview, index) => {
+            try {
+                webview.setIframContentHtmlStyle(colors);
+                if (/^#[0-9a-f]{6}([0-9a-f]{2})?$/i.test(primaryColor || '')) {
+                    webview.setIframContentStyleSheet(`dtmod-primary-color-${index}`, primaryCss);
+                }
+            } catch (error) {
+                // The iframe may not have finished loading yet; its load handler retries.
+            }
+        });
     }
 
     render() {
