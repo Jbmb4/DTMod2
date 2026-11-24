@@ -94,9 +94,10 @@ main.d-flex > .container-fluid,
     --panel-border: rgba(129, 169, 231, 0.17);
     --panel-text: #f3f7ff;
     --panel-muted: #94a5bf;
-    --panel-accent: #14b8a6;
-    --panel-accent-rgb: 20, 184, 166;
-    --panel-accent-strong: #14b8a6;
+    --panel-accent: #0f766e;
+    --panel-accent-rgb: 15, 118, 110;
+    --panel-accent-strong: #0f766e;
+    --panel-accent-ink: #ffffff;
 }
 
 body {
@@ -929,8 +930,8 @@ body {
 }
 
 .header .panel-theme-trigger {
-    width: 38px;
-    height: 38px;
+    width: 42px;
+    height: 42px;
     display: grid;
     place-items: center;
     margin: 0.2rem 0.35rem;
@@ -940,7 +941,7 @@ body {
 }
 
 .panel-theme-trigger i {
-    font-size: 1rem !important;
+    font-size: 1.2rem !important;
 }
 
 .panel-theme-palette[hidden] {
@@ -952,9 +953,9 @@ body {
     z-index: 1080;
     top: calc(100% + 0.55rem);
     right: 0;
-    width: 190px;
+    width: 174px;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     justify-items: center;
     gap: 0.65rem 0.45rem;
     padding: 0.8rem;
@@ -973,13 +974,13 @@ body {
 }
 
 .header .panel-theme-swatch {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
+    width: 58px;
+    height: 26px;
+    min-width: 58px;
     margin: 0;
     padding: 0;
     border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
+    border-radius: 7px;
     visibility: visible;
     cursor: pointer;
     transition: transform 140ms ease, box-shadow 140ms ease;
