@@ -94,8 +94,9 @@ main.d-flex > .container-fluid,
     --panel-border: rgba(129, 169, 231, 0.17);
     --panel-text: #f3f7ff;
     --panel-muted: #94a5bf;
-    --panel-accent: #6daeff;
-    --panel-accent-strong: #7b70ef;
+    --panel-accent: #14b8a6;
+    --panel-accent-rgb: 20, 184, 166;
+    --panel-accent-strong: #14b8a6;
 }
 
 body {
@@ -744,16 +745,16 @@ select optgroup {
 .dashboard-home .dashboard-subscription-card {
     height: 100%;
     overflow: hidden;
-    border: 1px solid rgba(207, 151, 171, 0.17) !important;
+    border: 1px solid rgba(var(--panel-accent-rgb), 0.2) !important;
     border-radius: 18px !important;
-    background: linear-gradient(145deg, #381c29, #301722) !important;
+    background: linear-gradient(145deg, #172538, #111c2d) !important;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
     transition: transform 160ms ease, border-color 160ms ease;
 }
 
 .dashboard-card-link:hover .dashboard-stat-card {
     transform: translateY(-2px);
-    border-color: rgba(220, 159, 181, 0.38) !important;
+    border-color: rgba(var(--panel-accent-rgb), 0.48) !important;
 }
 
 .dashboard-home .dashboard-stat-card .card-body {
@@ -766,11 +767,11 @@ select optgroup {
     width: 58px !important;
     height: 58px !important;
     margin-bottom: 0.7rem !important;
-    background: rgba(37, 49, 55, 0.92) !important;
+    background: rgba(var(--panel-accent-rgb), 0.16) !important;
 }
 
 .dashboard-home .dashboard-stat-icon .stat-icon-glyph {
-    color: #f6f2f3 !important;
+    color: var(--panel-accent) !important;
     font-size: 1.45rem !important;
 }
 
@@ -794,7 +795,7 @@ select optgroup {
 .dashboard-stat-arrow {
     display: inline-block;
     margin-top: 0.2rem;
-    color: #f5e4eb;
+    color: var(--panel-accent);
     font-size: 1.25rem;
 }
 
@@ -814,7 +815,7 @@ select optgroup {
 
 .dashboard-subscription-icon {
     margin-bottom: 0.55rem;
-    color: #fff4f7;
+    color: var(--panel-accent);
     font-size: 1.75rem;
     line-height: 1;
 }
@@ -846,7 +847,7 @@ select optgroup {
 }
 
 .dashboard-progress {
-    background: #f0443d;
+    background: var(--panel-accent);
 }
 
 .dashboard-progress-lifetime {
@@ -854,11 +855,11 @@ select optgroup {
 }
 
 .dashboard-expiration-card {
-    background: linear-gradient(145deg, #381c29, #301722) !important;
+    background: linear-gradient(145deg, #172538, #111c2d) !important;
 }
 
 .dashboard-expiration-value {
-    background: #f0443d;
+    background: var(--panel-accent);
     font-size: 0.95rem;
 }
 
@@ -892,5 +893,170 @@ select optgroup {
 
     .dashboard-home .dashboard-stat-card .card-body {
         min-height: 210px;
+    }
+}
+
+
+/* User-selectable dashboard accent palette */
+body {
+    background:
+        radial-gradient(circle at 12% 0%, rgba(var(--panel-accent-rgb), 0.10), transparent 28%),
+        radial-gradient(circle at 92% 100%, rgba(var(--panel-accent-rgb), 0.06), transparent 32%),
+        var(--panel-bg);
+}
+
+.header {
+    border-bottom-color: rgba(var(--panel-accent-rgb), 0.18);
+}
+
+.header button,
+.header a {
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.header button {
+    color: var(--panel-accent);
+    background: rgba(var(--panel-accent-rgb), 0.12);
+}
+
+.header button:not(.panel-theme-swatch):hover,
+.header a:hover {
+    background: rgba(var(--panel-accent-rgb), 0.2);
+}
+
+.panel-theme-picker {
+    position: relative;
+}
+
+.header .panel-theme-trigger {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    margin: 0.2rem 0.35rem;
+    padding: 0;
+    border: 1px solid rgba(var(--panel-accent-rgb), 0.24);
+    color: var(--panel-accent);
+}
+
+.panel-theme-trigger i {
+    font-size: 1rem !important;
+}
+
+.panel-theme-palette[hidden] {
+    display: none !important;
+}
+
+.panel-theme-palette {
+    position: absolute;
+    z-index: 1080;
+    top: calc(100% + 0.55rem);
+    right: 0;
+    width: 190px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    justify-items: center;
+    gap: 0.65rem 0.45rem;
+    padding: 0.8rem;
+    border: 1px solid var(--panel-border);
+    border-radius: 14px;
+    background: #121b2b;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.36);
+}
+
+.panel-theme-title {
+    grid-column: 1 / -1;
+    justify-self: start;
+    color: var(--panel-text);
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.header .panel-theme-swatch {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    margin: 0;
+    padding: 0;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    visibility: visible;
+    cursor: pointer;
+    transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.panel-theme-swatch:hover {
+    transform: scale(1.12);
+}
+
+.panel-theme-swatch.is-selected {
+    border-color: #fff;
+    box-shadow: 0 0 0 2px rgba(var(--panel-accent-rgb), 0.55);
+}
+
+.panel-theme-swatch[data-panel-theme='violet'] { background: #8b5cf6; }
+.panel-theme-swatch[data-panel-theme='sky'] { background: #38bdf8; }
+.panel-theme-swatch[data-panel-theme='mint'] { background: #34d399; }
+.panel-theme-swatch[data-panel-theme='orange'] { background: #e87524; }
+.panel-theme-swatch[data-panel-theme='navy'] { background: #3b82f6; }
+.panel-theme-swatch[data-panel-theme='pink'] { background: #d9469a; }
+.panel-theme-swatch[data-panel-theme='teal'] { background: #14b8a6; }
+.panel-theme-swatch[data-panel-theme='amber'] { background: #b98a00; }
+
+.form-control:focus,
+.form-select:focus,
+textarea:focus,
+input:focus {
+    border-color: var(--panel-accent) !important;
+    box-shadow: 0 0 0 4px rgba(var(--panel-accent-rgb), 0.14) !important;
+}
+
+.form-check-input:checked {
+    border-color: var(--panel-accent) !important;
+    background-color: var(--panel-accent) !important;
+}
+
+.btn-primary,
+.btn-outline-primary,
+.pagination .page-item.active .page-link {
+    border-color: var(--panel-accent) !important;
+    background-color: var(--panel-accent) !important;
+}
+
+.btn-primary,
+.pagination .page-item.active .page-link {
+    color: #fff !important;
+}
+
+.btn-outline-primary {
+    color: var(--panel-accent) !important;
+}
+
+.summary-icon,
+.stat-icon-glyph,
+.bi-arrow-right-circle,
+.text-primary,
+.link-primary {
+    color: var(--panel-accent) !important;
+}
+
+.summary-card,
+.stat-card,
+.dashboard-home .dashboard-stat-card,
+.dashboard-home .dashboard-subscription-card {
+    border-color: rgba(var(--panel-accent-rgb), 0.2) !important;
+}
+
+.dashboard-stat-label,
+.dashboard-stat-value,
+.dashboard-subscription-label,
+.dashboard-home .dashboard-stat-card .card-body,
+.dashboard-subscription-card .card-body {
+    color: var(--panel-text) !important;
+}
+
+@media (max-width: 420px) {
+    .panel-theme-palette {
+        right: -3.2rem;
     }
 }
