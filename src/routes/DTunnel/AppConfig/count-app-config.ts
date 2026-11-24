@@ -15,9 +15,14 @@ export default {
       where: { user_id: req.user.id },
     });
 
+    const total_cdns = await prisma.cdn.count({
+      where: { user_id: req.user.id },
+    });
+
     reply.send({
       total_categories,
       total_configs,
+      total_cdns,
     });
   },
 } as RouteOptions;

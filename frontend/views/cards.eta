@@ -1,52 +1,4 @@
-<div class="main-content-container container-fluid px-4">
-  <div class="mb-2">
-    <h4 class="fw-bold">
-      <i class="bi bi-calendar-check me-2"></i> Informações da Conta
-    </h4>
-    <hr />
-  </div>
-  <div class="row">
-    <div class="col-md-4 mb-3">
-      <div class="card shadow border border-0 summary-card">
-        <div class="card-body text-center">
-          <i class="bi bi-calendar-plus summary-icon mb-2"></i>
-          <p class="summary-label">Registrado em</p>
-          <div class="summary-value fs-5 bg-dark rounded-pill text-white ps-2">
-            <%= it.formatDate(it.user.created_at) %>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4 mb-3">
-      <div class="card shadow border border-0 summary-card">
-        <div class="card-body text-center">
-          <i class="bi bi-arrow-repeat summary-icon mb-2"></i>
-          <p class="summary-label">Atualizado em</p>
-          <div class="summary-value fs-5 bg-dark rounded-pill text-white ps-2">
-            <%= it.formatDate(it.user.updated_at) %>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4 mb-3">
-      <div class="card shadow border border-0 summary-card">
-        <div class="card-body text-center">
-          <i class="bi bi-hourglass-split summary-icon mb-2"></i>
-          <p class="summary-label">Expira em</p>
-          <div class="d-flex gap-3">
-            <div class="summary-value fs-5 bg-dark rounded-pill text-white flex-fill ps-2">
-              <% if (it.user.access_expires_at) { %>
-                <%= it.formatDate(it.user.access_expires_at) %>
-              <% } else { %>
-                <i class="bi bi-infinity"></i> Vitalício
-              <% } %>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
+<div class="main-content-container container-fluid px-4 dashboard-home">
   <% if (it.collaboratorEnabled) { %>
   <div class="row">
     <div class="col-12 mb-3">
@@ -66,48 +18,97 @@
   </div>
   <% } %>
 
-  <div class="row">
-    <div class="mb-2">
-      <h4 class="fw-bold">
-        <i class="bi bi-graph-up me-2"></i> Estatísticas do Sistema
-      </h4>
-      <hr />
+  <section aria-labelledby="dashboard-stats-title" class="dashboard-section">
+    <div class="dashboard-section-heading">
+      <h4 id="dashboard-stats-title" class="fw-bold"><i class="bi bi-graph-up me-2"></i>Estatísticas do Sistema</h4>
     </div>
-    <div class="col-md-4 mb-3">
-      <div class="card border border-0 shadow stat-card">
-        <div class="card-body text-center text-nowrap">
-          <a href="/configs" target="_self" class="text-decoration-none link-none">
-            <div class="rounded-circle bg-dark bg-opacity-10 mx-auto mb-3 d-flex align-items-center justify-content-center stat-icon" style="width: 70px; height: 70px">
-              <i class="bi bi-gear stat-icon-glyph text-light"></i>
+    <div class="row dashboard-stat-grid">
+      <div class="col-12 col-md-4 mb-3">
+        <a href="/configs" target="_self" class="text-decoration-none link-none dashboard-card-link">
+          <div class="card stat-card dashboard-stat-card">
+            <div class="card-body text-center">
+              <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center stat-icon dashboard-stat-icon"><i class="bi bi-gear stat-icon-glyph"></i></div>
+              <p class="dashboard-stat-label">TOTAL DE CONFIGURAÇÕES</p>
+              <p class="__config dashboard-stat-value"></p>
+              <p class="__config__placeholder dashboard-stat-value placeholder-glow"><span class="placeholder rounded-pill col-3 p-3"></span></p>
+              <i class="bi bi-arrow-right-circle dashboard-stat-arrow" aria-hidden="true"></i>
             </div>
-            <p class="fw-bold fs-6">TOTAL DE CONFIGURAÇÕES</p>
-            <p class="__config fs-1"></p>
-            <p class="__config__placeholder fs-1 placeholder-glow">
-              <span class="placeholder rounded rounded-pill col-3 p-3"></span>
-            </p>
-            <div class="mt-3">
-              <i class="fs-3 bi bi-arrow-right-circle"></i>
+          </div>
+        </a>
+      </div>
+      <div class="col-12 col-md-4 mb-3">
+        <a href="/categories" target="_self" class="text-decoration-none link-none dashboard-card-link">
+          <div class="card stat-card dashboard-stat-card">
+            <div class="card-body text-center">
+              <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center stat-icon dashboard-stat-icon"><i class="bi bi-tags stat-icon-glyph"></i></div>
+              <p class="dashboard-stat-label">TOTAL DE CATEGORIAS</p>
+              <p class="__category dashboard-stat-value"></p>
+              <p class="__category__placeholder dashboard-stat-value placeholder-glow"><span class="placeholder rounded-pill col-3 p-3"></span></p>
+              <i class="bi bi-arrow-right-circle dashboard-stat-arrow" aria-hidden="true"></i>
             </div>
-          </a>
+          </div>
+        </a>
+      </div>
+      <div class="col-12 col-md-4 mb-3">
+        <a href="/cdn" target="_self" class="text-decoration-none link-none dashboard-card-link">
+          <div class="card stat-card dashboard-stat-card">
+            <div class="card-body text-center">
+              <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center stat-icon dashboard-stat-icon"><i class="bi bi-cloud stat-icon-glyph"></i></div>
+              <p class="dashboard-stat-label">TOTAL DE CDNs</p>
+              <p class="__cdn dashboard-stat-value"></p>
+              <p class="__cdn__placeholder dashboard-stat-value placeholder-glow"><span class="placeholder rounded-pill col-3 p-3"></span></p>
+              <i class="bi bi-arrow-right-circle dashboard-stat-arrow" aria-hidden="true"></i>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="dashboard-subscription-title" class="dashboard-section dashboard-subscription">
+    <div class="dashboard-section-heading">
+      <h4 id="dashboard-subscription-title" class="fw-bold"><i class="bi bi-credit-card me-2"></i>Assinatura</h4>
+    </div>
+    <div class="row">
+      <div class="col-12 mb-3">
+        <div class="card dashboard-subscription-card">
+          <div class="card-body text-center">
+            <i class="bi bi-person-check dashboard-subscription-icon" aria-hidden="true"></i>
+            <h5 class="dashboard-subscription-label">Status da conta</h5>
+            <span class="dashboard-status-badge">Ativo</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 mb-3">
+        <div class="card dashboard-subscription-card">
+          <div class="card-body text-center">
+            <i class="bi bi-calendar-week dashboard-subscription-icon" aria-hidden="true"></i>
+            <h5 class="dashboard-subscription-label">Dias restantes</h5>
+            <% if (it.daysRemaining === null) { %>
+              <div class="dashboard-progress dashboard-progress-lifetime" role="status">Vitalício</div>
+            <% } else { %>
+              <div class="dashboard-progress" role="progressbar" aria-label="Dias restantes da assinatura" aria-valuenow="<%= it.daysRemaining %>" aria-valuemin="0" aria-valuemax="30">
+                <span class="dashboard-progress-value"><%= it.daysRemaining %></span>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 mb-3">
+        <div class="card dashboard-subscription-card dashboard-expiration-card">
+          <div class="card-body text-center">
+            <i class="bi bi-hourglass-split dashboard-subscription-icon" aria-hidden="true"></i>
+            <h5 class="dashboard-subscription-label">Expira em</h5>
+            <div class="dashboard-expiration-value">
+              <% if (it.user.access_expires_at) { %>
+                <%= it.formatDate(it.user.access_expires_at) %>
+              <% } else { %>
+                <i class="bi bi-infinity me-1" aria-hidden="true"></i>Vitalício
+              <% } %>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="col-md-4 mb-3">
-      <div class="card border border-0 shadow stat-card">
-        <div class="card-body text-center text-nowrap">
-          <a href="/categories" target="_self" class="text-decoration-none link-none">
-            <div class="rounded-circle bg-dark bg-opacity-10 mx-auto mb-3 d-flex align-items-center justify-content-center stat-icon" style="width: 70px; height: 70px">
-              <i class="bi bi-tags stat-icon-glyph text-light"></i>
-            </div>
-            <p class="fw-bold fs-6">TOTAL DE CATEGORIAS</p>
-            <p class="__category fs-1"></p>
-            <p class="placeholder-glow fs-1 __category__placeholder">
-              <span class="placeholder rounded rounded-pill col-3 p-3"></span>
-            </p>
-            <i class="fs-3 bi bi-arrow-right-circle"></i>
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
+  </section>
 </div>

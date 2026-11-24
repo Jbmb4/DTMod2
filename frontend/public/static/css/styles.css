@@ -706,3 +706,191 @@ select optgroup {
         height: 31px;
     }
 }
+
+
+/* Dashboard mobile cards matching the supplied panel reference */
+.dashboard-home {
+    padding-top: 0.8rem;
+    padding-bottom: 1rem;
+}
+
+.dashboard-section-heading {
+    margin: 0 0 0.65rem;
+}
+
+.dashboard-section-heading h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.dashboard-section-heading::after {
+    content: '';
+    display: block;
+    margin-top: 0.65rem;
+    border-bottom: 1px solid var(--panel-border);
+}
+
+.dashboard-stat-grid > [class*='col-'] {
+    margin-bottom: 0.75rem !important;
+}
+
+.dashboard-card-link {
+    display: block;
+    height: 100%;
+}
+
+.dashboard-home .dashboard-stat-card,
+.dashboard-home .dashboard-subscription-card {
+    height: 100%;
+    overflow: hidden;
+    border: 1px solid rgba(207, 151, 171, 0.17) !important;
+    border-radius: 18px !important;
+    background: linear-gradient(145deg, #381c29, #301722) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+    transition: transform 160ms ease, border-color 160ms ease;
+}
+
+.dashboard-card-link:hover .dashboard-stat-card {
+    transform: translateY(-2px);
+    border-color: rgba(220, 159, 181, 0.38) !important;
+}
+
+.dashboard-home .dashboard-stat-card .card-body {
+    min-height: 194px;
+    padding: 1rem 0.9rem 0.9rem !important;
+    color: #f7edf1 !important;
+}
+
+.dashboard-home .dashboard-stat-icon {
+    width: 58px !important;
+    height: 58px !important;
+    margin-bottom: 0.7rem !important;
+    background: rgba(37, 49, 55, 0.92) !important;
+}
+
+.dashboard-home .dashboard-stat-icon .stat-icon-glyph {
+    color: #f6f2f3 !important;
+    font-size: 1.45rem !important;
+}
+
+.dashboard-stat-label {
+    min-height: 1.45rem;
+    margin: 0 0 0.35rem !important;
+    color: #f8edf1 !important;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.dashboard-stat-value {
+    min-height: 2.6rem;
+    margin: 0 0 0.15rem !important;
+    color: #fff7fa !important;
+    font-size: 1.75rem !important;
+    line-height: 1.15;
+}
+
+.dashboard-stat-arrow {
+    display: inline-block;
+    margin-top: 0.2rem;
+    color: #f5e4eb;
+    font-size: 1.25rem;
+}
+
+.dashboard-subscription {
+    margin-top: 0.35rem;
+}
+
+.dashboard-subscription-card .card-body {
+    min-height: 174px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 1.1rem !important;
+    color: #f7edf1 !important;
+}
+
+.dashboard-subscription-icon {
+    margin-bottom: 0.55rem;
+    color: #fff4f7;
+    font-size: 1.75rem;
+    line-height: 1;
+}
+
+.dashboard-subscription-label {
+    margin: 0 0 0.8rem;
+    color: #f8edf1 !important;
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.dashboard-status-badge,
+.dashboard-progress,
+.dashboard-expiration-value {
+    width: 100%;
+    min-height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.28rem 0.85rem;
+    border-radius: 999px;
+    color: #fff !important;
+    font-size: 1rem;
+    line-height: 1.2;
+}
+
+.dashboard-status-badge {
+    background: #159764;
+}
+
+.dashboard-progress {
+    background: #f0443d;
+}
+
+.dashboard-progress-lifetime {
+    background: #159764;
+}
+
+.dashboard-expiration-card {
+    background: linear-gradient(145deg, #381c29, #301722) !important;
+}
+
+.dashboard-expiration-value {
+    background: #f0443d;
+    font-size: 0.95rem;
+}
+
+@media (max-width: 767px) {
+    .dashboard-home {
+        padding-right: 0.7rem !important;
+        padding-left: 0.7rem !important;
+    }
+
+    .dashboard-home .dashboard-stat-card .card-body {
+        min-height: 202px;
+        padding: 0.85rem 0.75rem !important;
+    }
+
+    .dashboard-subscription-card .card-body {
+        min-height: 168px;
+        padding: 0.9rem 0.9rem !important;
+    }
+
+    .dashboard-stat-label {
+        font-size: 0.8rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .dashboard-home {
+        max-width: 1120px;
+        margin-right: auto;
+        margin-left: auto;
+    }
+
+    .dashboard-home .dashboard-stat-card .card-body {
+        min-height: 210px;
+    }
+}

@@ -53,6 +53,8 @@
 
       const category = document.querySelector('.__category');
       const categoryPlaceholder = document.querySelector('.__category__placeholder');
+      const cdn = document.querySelector('.__cdn');
+      const cdnPlaceholder = document.querySelector('.__cdn__placeholder');
 
       try {
 
@@ -64,18 +66,22 @@
         if (response.message) {
           config.textContent = padStart(0, 2, '0');
           category.textContent = padStart(0, 2, '0');
+          cdn.textContent = padStart(0, 2, '0');
           return;
         }
 
         config.textContent = padStart(response.total_configs, 2, '');
         category.textContent = padStart(response.total_categories, 2, '');
+        cdn.textContent = padStart(response.total_cdns ?? 0, 2, '');
 
       } catch (err) {
         setInternalError(config);
         setInternalError(category);
+        setInternalError(cdn);
       } finally {
         configPlaceholder.classList.add('d-none');
         categoryPlaceholder.classList.add('d-none');
+        cdnPlaceholder.classList.add('d-none');
       }
     };
 
