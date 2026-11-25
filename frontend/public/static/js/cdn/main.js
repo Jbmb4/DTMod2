@@ -7,7 +7,7 @@ import { Observer } from "../common/observer.js";
 import { ButtonAdd, ButtonDelete } from "./components/buttons.js";
 import { CdnForm, CdnModal } from "./modals/cdn.js";
 import Status from "./components/status.js";
-import Pagination from "../common/pagination.js";
+import Pagination from "../common/pagination.js?v=20261125-pagination";
 
 import NoFoundCdn from "./errors/noFoundCdn.js";
 import { InternalError } from "../common/errors.js";
@@ -68,7 +68,15 @@ let csrfToken = getCsrfTokenHead();
 
 const main = async () => {
     const root = document.getElementById('root')
+    const totalCountElement = document.getElementById('cdn-total-count')
     showSpinner(root)
+
+    const updateTotalCount = total => {
+        const count = Number.isFinite(Number(total)) ? Math.max(0, Math.floor(Number(total))) : 0
+        if (totalCountElement) {
+            totalCountElement.textContent = `${count} ${count === 1 ? 'CDN cadastrada' : 'CDNs cadastradas'}`
+        }
+    }
 
     const status = new Status()
     const pagination = new Pagination(document.querySelector('#pagination'))
@@ -88,6 +96,7 @@ const main = async () => {
             pagination.offset = data.data.offset
             pagination.limit = data.data.limit
             pagination.total = data.data.total
+            updateTotalCount(pagination.total)
             pagination.mount()
 
             return CdnList.fromJson(data.data.result)
@@ -100,6 +109,17 @@ const main = async () => {
     }
 
     const cdnList = await getCdns()
+    const reloadCdnPage = async () => {
+        showSpinner(root)
+        try {
+            const refreshedList = await getCdns()
+            cdnList.cdns = refreshedList.cdns
+            render()
+        } catch (_) {
+            // getCdns renders the existing internal-error state.
+        }
+    }
+
     pagination.setOnPageChange(async () => {
         showSpinner(root);
         cdnList.cdns = (await getCdns()).cdns
@@ -168,13 +188,16 @@ const main = async () => {
 
         if (response.status == 201) {
             cdn.id = data.cdn_id;
+            pagination.total += 1;
+            updateTotalCount(pagination.total)
+            pagination.render()
             showToastSuccess(`CDN ${cdn.name} criada com sucesso!`)
             render()
             return
         }
 
         showToastError(`Erro ao criar CDN ${cdn.name}!`)
-        cdnList.remove(cdn)
+        cdnList.cdns = cdnList.cdns.filter(item => item !== cdn)
         render()
     }))
 
@@ -193,6 +216,11 @@ const main = async () => {
             });
 
             if (response.status == 204) {
+                pagination.total = Math.max(0, pagination.total - 1)
+                const lastPage = Math.max(1, Math.ceil(pagination.total / pagination.limit))
+                pagination.offset = Math.min(pagination.offset, lastPage)
+                pagination.render()
+                await reloadCdnPage()
                 showToastSuccess(`CDN ${cdn.name} removida com sucesso!`)
                 return
             }
@@ -200,14 +228,17 @@ const main = async () => {
             const data = await response.json();
             if (data.message) {
                 showToastError(data.message);
+                await reloadCdnPage()
                 return
             }
 
         } catch (err) {
             showToastError(`Erro ao remover CDN ${cdn.name}!`)
+            await reloadCdnPage()
+            return
         }
 
-        render()
+        await reloadCdnPage()
     }))
 
     cdnList.register(new Observer('update', async cdn => {

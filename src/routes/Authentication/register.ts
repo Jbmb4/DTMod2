@@ -5,6 +5,7 @@ import SafeCallback from '../../utils/safe-callback';
 import AppTextDefault from '../DTunnel/AppText/defaults';
 import csrfProtection from '../../middlewares/csrf-protection';
 import { FastifyReply, FastifyRequest, RouteOptions } from 'fastify';
+import { calculateAccessExpiration } from '../../utils/access-expiration';
 
 const registerSchema = z.object({
   username: z.string().min(6).max(20),
@@ -19,6 +20,11 @@ export default {
   handler: async (req: FastifyRequest, reply: FastifyReply) => {
     const { username, email, password } = registerSchema.parse(req.body);
     const normalizedEmail = email.trim().toLowerCase();
+    const access_expires_at = calculateAccessExpiration({
+      access_type: 'duration',
+      access_duration: 31,
+      access_unit: 'days',
+    });
 
     const usernameAlreadyExists = await SafeCallback(() =>
       prisma.user.findFirst({
@@ -54,6 +60,7 @@ export default {
           email: normalizedEmail,
           username,
           password: passwordHash,
+          access_expires_at,
         },
       })
     );

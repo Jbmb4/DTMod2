@@ -7,7 +7,7 @@ import { Observer } from "../common/observer.js";
 import { ButtonAdd, ButtonDelete } from "./components/buttons.js";
 import { CategoryForm, CategoryModal } from "./modals/category.js";
 import Status from "./components/status.js";
-import Pagination from "../common/pagination.js";
+import Pagination from "../common/pagination.js?v=20261125-pagination";
 
 import NoFoundCategory from "./errors/noFoundCategory.js";
 import { InternalError } from "../common/errors.js";

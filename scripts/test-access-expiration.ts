@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {
   accessExpirationInputSchema,
   calculateAccessExpiration,
+  getAccessDaysRemaining,
   isAccessActive,
   isAccessExpired,
 } from '../src/utils/access-expiration';
@@ -36,5 +37,16 @@ const expiredDate = new Date('2026-08-20T00:00:00.000Z');
 assert.equal(isAccessActive(activeDate, base), true);
 assert.equal(isAccessExpired(expiredDate, base), true);
 assert.equal(isAccessActive(null, base), true);
+assert.equal(
+  getAccessDaysRemaining(
+    calculateAccessExpiration({ access_type: 'duration', access_duration: 31, access_unit: 'days' }, base),
+    base
+  ),
+  31
+);
+assert.equal(getAccessDaysRemaining(new Date(base.getTime() + 1), base), 1);
+assert.equal(getAccessDaysRemaining(base, base), 0);
+assert.equal(getAccessDaysRemaining('data-invalida', base), null);
+assert.equal(getAccessDaysRemaining(null, base), null);
 
 console.log('access-expiration tests passed');

@@ -6,7 +6,7 @@ import {
     InputImage, InputSelect, InputString, InputText, InputUrl
 } from "./components/form.js";
 
-import Pagination from "../common/pagination.js";
+import Pagination from "../common/pagination.js?v=20261125-pagination";
 
 import AppCustomModal from "./modals/custom.js";
 import AppConfigExportModal from "./modals/export.js";

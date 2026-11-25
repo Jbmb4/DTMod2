@@ -66,6 +66,7 @@ class Pagination {
     render() {
         if (this.total <= this.limit) {
             this.element.innerHTML = '';
+            this.limitDiv.innerHTML = '';
             return;
         }
         this.element.innerHTML = this.renderPreviusButton() + this.RenderConfigButtons() + this.renderNextButton();
@@ -86,6 +87,7 @@ class Pagination {
         nav.appendChild(this.element);
 
         if (this.root) {
+            this.root.innerHTML = '';
             this.root.appendChild(nav);
             this.root.appendChild(this.limitDiv);
         };

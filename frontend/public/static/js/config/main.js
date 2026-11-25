@@ -1,7 +1,7 @@
 import { Observer } from './observer.js';
 import ConfigModel, { CategoryList, CategoryModel, ConfigList, Status } from './models.js';
 import Table, { TableItem } from './components/table.js';
-import Pagination from "../common/pagination.js";
+import Pagination from "../common/pagination.js?v=20261125-pagination";
 import Search from './components/search.js';
 import ConfigStatus from './components/status.js';
 import ExportConfigModal from './modals/export.js';

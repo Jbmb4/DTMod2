@@ -53,3 +53,16 @@ export function isAccessExpired(accessExpiresAt: Date | null | undefined, now = 
 export function isAccessActive(accessExpiresAt: Date | null | undefined, now = new Date()): boolean {
   return !isAccessExpired(accessExpiresAt, now);
 }
+
+export function getAccessDaysRemaining(
+  accessExpiresAt: Date | string | null | undefined,
+  now = new Date()
+): number | null {
+  if (accessExpiresAt === null || accessExpiresAt === undefined || accessExpiresAt === '') return null;
+
+  const expirationTimestamp =
+    accessExpiresAt instanceof Date ? accessExpiresAt.getTime() : new Date(accessExpiresAt).getTime();
+  if (!Number.isFinite(expirationTimestamp)) return null;
+
+  return Math.max(0, Math.ceil((expirationTimestamp - now.getTime()) / (24 * 60 * 60 * 1000)));
+}

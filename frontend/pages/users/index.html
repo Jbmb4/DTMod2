@@ -219,12 +219,18 @@
             const tr = document.createElement('tr');
             const createdDate = new Date(user.created_at).toLocaleDateString('pt-BR');
             const expirationDate = user.access_expires_at ? new Date(user.access_expires_at) : null;
-            const isExpired = expirationDate && expirationDate.getTime() <= Date.now();
+            const expirationTimestamp = expirationDate?.getTime();
+            const remainingDays = Number.isFinite(expirationTimestamp)
+              ? Math.max(0, Math.ceil((expirationTimestamp - Date.now()) / (24 * 60 * 60 * 1000)))
+              : null;
+            const isExpired = remainingDays === 0 && Boolean(expirationDate);
             const accessBadge = !expirationDate
               ? '<span class="badge bg-success"><i class="bi bi-infinity"></i> Vitalício</span>'
+              : remainingDays === null
+                ? '<span class="badge bg-secondary">Validade indisponível</span>'
               : isExpired
                 ? `<span class="badge bg-danger"><i class="bi bi-x-circle"></i> Expirado em ${expirationDate.toLocaleDateString('pt-BR')}</span>`
-                : `<span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Até ${expirationDate.toLocaleDateString('pt-BR')}</span>`;
+                : `<span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Restam ${remainingDays} dias · Até ${expirationDate.toLocaleDateString('pt-BR')}</span>`;
             const expirationArg = user.access_expires_at ? `'${user.access_expires_at}'` : 'null';
             tr.innerHTML = `
               <td>
