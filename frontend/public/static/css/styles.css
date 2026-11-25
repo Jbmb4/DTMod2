@@ -874,18 +874,72 @@ select optgroup {
         padding-left: 0.7rem !important;
     }
 
-    .dashboard-home .dashboard-stat-card .card-body {
-        min-height: 202px;
-        padding: 0.85rem 0.75rem !important;
+    .dashboard-stat-grid > [class*='col-'] {
+        margin-bottom: 0.45rem !important;
     }
 
-    .dashboard-subscription-card .card-body {
-        min-height: 168px;
-        padding: 0.9rem 0.9rem !important;
+    .dashboard-home .dashboard-stat-card .card-body {
+        min-height: 88px;
+        padding: 0.55rem 0.6rem !important;
+    }
+
+    .dashboard-home .dashboard-stat-icon {
+        width: 34px !important;
+        height: 34px !important;
+        margin-bottom: 0.3rem !important;
+    }
+
+    .dashboard-home .dashboard-stat-icon .stat-icon-glyph {
+        font-size: 1rem !important;
     }
 
     .dashboard-stat-label {
-        font-size: 0.8rem;
+        min-height: 0;
+        margin: 0 0 0.1rem !important;
+        font-size: 0.68rem;
+    }
+
+    .dashboard-stat-value {
+        min-height: 1.2rem;
+        margin: 0 !important;
+        font-size: 0.95rem !important;
+        line-height: 1.1;
+    }
+
+    .dashboard-stat-arrow {
+        margin-top: 0.05rem;
+        font-size: 0.95rem;
+    }
+
+    .dashboard-subscription > .row > [class*='col-'] {
+        margin-bottom: 0.45rem !important;
+    }
+
+    .dashboard-subscription-card .card-body {
+        min-height: 96px;
+        padding: 0.55rem 0.65rem !important;
+    }
+
+    .dashboard-subscription-icon {
+        margin-bottom: 0.25rem;
+        font-size: 1.05rem;
+    }
+
+    .dashboard-subscription-label {
+        margin-bottom: 0.4rem;
+        font-size: 0.78rem;
+    }
+
+    .dashboard-status-badge,
+    .dashboard-progress,
+    .dashboard-expiration-value {
+        min-height: 25px;
+        padding: 0.2rem 0.65rem;
+        font-size: 0.78rem;
+    }
+
+    .dashboard-stat-label {
+        font-size: 0.68rem;
     }
 }
 
