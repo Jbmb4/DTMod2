@@ -218,10 +218,10 @@ while true; do
                     else
                         echo -e "${YELLOW}Iniciando geracao do APK para: $domain${NC}"
                         echo -e "${CYAN}user_id aplicado automaticamente: $USER_ID${NC}"
-                        # Envie a chave por dois canais para não depender do shell
-                        # preservar variáveis de ambiente em instalações antigas.
+                        # A chave segue apenas no ambiente do gerador; stdin fica
+                        # fechado para impedir que ferramentas filhas a leiam.
                         export DTUNNEL_FCM_REGISTRATION_KEY="$REGISTRATION_KEY"
-                        if printf '%s' "$REGISTRATION_KEY" | python3 "$PANEL_DIR/scripts/generate_apk.py" "$domain" "$USER_ID" "$OUTPUT_APK" && [ -s "$OUTPUT_APK" ]; then
+                        if python3 "$PANEL_DIR/scripts/generate_apk.py" "$domain" "$USER_ID" "$OUTPUT_APK" && [ -s "$OUTPUT_APK" ]; then
                             APK_SRC="$OUTPUT_APK"
                         else
                             printf '%s' "$REGISTRATION_KEY" | python3 "$PANEL_DIR/scripts/prepare_cli_apk_registration.py" "$PANEL_DIR" revoke

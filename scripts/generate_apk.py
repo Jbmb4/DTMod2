@@ -57,9 +57,11 @@ def run_command(command: list[str], *, cwd: Path | None = None) -> None:
         env["PATH"] = f"/usr/local/bin:{env.get('PATH', '')}"
     
     try:
-        completed = subprocess.run(command, cwd=cwd, env=env)
+        completed = subprocess.run(command, cwd=cwd, env=env, stdin=subprocess.DEVNULL, timeout=15 * 60)
     except FileNotFoundError as e:
         raise RuntimeError(f"Ferramenta não encontrada: {command[0]}. Certifique-se de que está instalada e no PATH.") from e
+    except subprocess.TimeoutExpired as e:
+        raise RuntimeError(f"A etapa {command[0]} excedeu o limite de 15 minutos e foi interrompida.") from e
 
     if completed.returncode != 0:
         raise RuntimeError(f"Erro ao executar {command[0]} (código {completed.returncode})")
@@ -549,8 +551,10 @@ def generate_apk(args: argparse.Namespace) -> Path:
     if not apk_path.is_file():
         raise FileNotFoundError(f"APK base não encontrada: {apk_path}")
 
+    print("Preparando diretórios temporários...", flush=True)
     for directory in (work_dir, output_dir):
         if directory.exists():
+            print(f"Removendo diretório temporário anterior: {directory}", flush=True)
             shutil.rmtree(directory)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -559,6 +563,7 @@ def generate_apk(args: argparse.Namespace) -> Path:
         if not getattr(args, "xhttp", False):
             verify_hcr_base(apk_path)
         run_command([*APKTOOL_CMD, "d", "-f", str(apk_path), "-o", str(work_dir)])
+        print("Aplicando domínio, usuário e registro FCM...", flush=True)
         if getattr(args, "xhttp", False):
             verify_xhttp_runtime(work_dir)
 
