@@ -176,9 +176,15 @@
 }
 
 .nav-link.active {
-  box-shadow: inset 3px 0 0 #72b0ff;
+  box-shadow: inset 3px 0 0 var(--panel-accent, #3867f2);
 }
 
 .nav-link:hover {
   transform: translateX(2px);
+}
+
+.sidebar .nav-link.active,
+.sidebar .nav-link:hover,
+.sidebar .nav-link:focus {
+  background: rgba(var(--panel-accent-rgb, 56, 103, 242), 0.2) !important;
 }

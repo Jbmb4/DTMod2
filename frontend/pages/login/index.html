@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0a1020">
     <meta name="csrf-token" content="<%= it.csrfToken %>">
-    <title>MB4NEXUS — Acesso</title>
+    <title>DTMod - AZPRO — Acesso</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../static/css/signin.css">
+    <link rel="stylesheet" href="../static/css/signin.css?v=20261124-azpro">
 </head>
 <body class="signin-page">
     <div class="ambient ambient-one" aria-hidden="true"></div>
@@ -21,11 +21,11 @@
             <div class="brand-mark">
                 <span class="brand-ring brand-ring-one" aria-hidden="true"></span>
                 <span class="brand-ring brand-ring-two" aria-hidden="true"></span>
-                <img src="/static/img/icon.jpg?v=20260815-nexus-3" alt="MB4NEXUS">
+                <img src="/static/img/icon.jpg?v=20260815-nexus-3" alt="DTMod - AZPRO">
             </div>
 
             <div class="brand-copy">
-                <h1 id="loginTitle">DTMod - MB4Nexus</h1>
+                <h1 id="loginTitle">DTMod - AZPRO</h1>
             </div>
 
             <div id="error-message" class="alert alert-error hidden" role="alert" aria-live="polite"></div>
@@ -74,19 +74,24 @@
             <a class="register-link" href="/register">Registrar conta</a>
 
         </section>
-        <div class="signin-theme-picker" role="group" aria-label="Escolha a cor do painel">
-            <button class="panel-theme-swatch signin-theme-swatch" type="button" data-panel-theme="violet" aria-label="Roxo" title="Roxo"></button>
-            <button class="panel-theme-swatch signin-theme-swatch" type="button" data-panel-theme="sky" aria-label="Azul claro" title="Azul claro"></button>
-            <button class="panel-theme-swatch signin-theme-swatch" type="button" data-panel-theme="mint" aria-label="Verde menta" title="Verde menta"></button>
-            <button class="panel-theme-swatch signin-theme-swatch" type="button" data-panel-theme="orange" aria-label="Laranja" title="Laranja"></button>
-            <button class="panel-theme-swatch signin-theme-swatch" type="button" data-panel-theme="navy" aria-label="Azul marinho" title="Azul marinho"></button>
-            <button class="panel-theme-swatch signin-theme-swatch" type="button" data-panel-theme="pink" aria-label="Rosa" title="Rosa"></button>
-            <button class="panel-theme-swatch signin-theme-swatch" type="button" data-panel-theme="teal" aria-label="Turquesa" title="Turquesa"></button>
-            <button class="panel-theme-swatch signin-theme-swatch" type="button" data-panel-theme="amber" aria-label="Amarelo" title="Amarelo"></button>
+        <div class="signin-theme-control">
+            <button id="signin-theme-trigger" class="signin-theme-trigger" type="button" aria-label="Mostrar cores do painel" aria-haspopup="true" aria-expanded="true" aria-controls="signin-theme-palette">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.2a2 2 0 0 0 1.4-3.4 1.5 1.5 0 0 1 1.1-2.6H18a3 3 0 0 0 3-3c0-5-4-9-9-9Zm-4 9.2a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Zm3-3.8a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Zm4 0a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Zm3 3.8a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Z" fill="currentColor"/></svg>
+            </button>
+            <div id="signin-theme-palette" class="signin-theme-picker" role="group" aria-label="Escolha a cor do painel">
+                <button class="panel-theme-swatch signin-theme-swatch" type="button" data-panel-theme="blue" aria-label="Azul" title="Azul"></button>
+                <button class="panel-theme-swatch signin-theme-swatch" type="button" data-panel-theme="green" aria-label="Verde" title="Verde"></button>
+                <button class="panel-theme-swatch signin-theme-swatch" type="button" data-panel-theme="purple" aria-label="Roxo" title="Roxo"></button>
+                <button class="panel-theme-swatch signin-theme-swatch" type="button" data-panel-theme="orange" aria-label="Laranja" title="Laranja"></button>
+                <button class="panel-theme-swatch signin-theme-swatch" type="button" data-panel-theme="lightblue" aria-label="Azul claro" title="Azul claro"></button>
+                <button class="panel-theme-swatch signin-theme-swatch" type="button" data-panel-theme="pink" aria-label="Rosa" title="Rosa"></button>
+                <button class="panel-theme-swatch signin-theme-swatch" type="button" data-panel-theme="cyan" aria-label="Ciano" title="Ciano"></button>
+                <button class="panel-theme-swatch signin-theme-swatch" type="button" data-panel-theme="yellow" aria-label="Amarelo" title="Amarelo"></button>
+            </div>
         </div>
     </main>
 
-    <script src="../static/js/dark_light.js"></script>
+    <script src="../static/js/dark_light.js?v=20261124-azpro"></script>
     <script src="../static/js/utils.js"></script>
     <script>
         const Elements = {

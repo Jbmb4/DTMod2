@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR" translate="no" data-bs-theme="dark">
+<head>
+  <base href="/" target="_blank">
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="google" content="notranslate">
+  <link rel="shortcut icon" href="/static/img/favicon.svg?v=20261124-azpro" />
+  <title>DTMod - AZPRO - Notificações</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="../static/css/styles.css?v=20261124-azpro">
+  <link rel="stylesheet" href="../static/css/bootstrap.css">
+  <link rel="stylesheet" href="../static/css/sidebar.css?v=20261124-azpro">
+  <link rel="stylesheet" href="../static/css/header.css?v=20261124-azpro">
+  <meta name="csrf-token" content="<%= it.csrfToken %>">
+</head>
+<body>
+  <main class="d-flex">
+    <%~ include("./sidebar", it) %>
+    <div class="container-fluid p-0">
+      <%~ include("./header", it) %>
+      <div class="content pt-1 overflow-auto">
+        <div class="main-content-container container-fluid px-4">
+          <div class="mb-3">
+            <h4 class="fw-bold"><i class="bi bi-bell me-2"></i>Enviar notificação</h4>
+            <p class="text-secondary mb-2">Envie uma notificação FCM para um dispositivo do aplicativo DTunnel.</p>
+            <hr>
+          </div>
+
+          <% if (!it.firebaseConfigured) { %>
+          <div class="alert alert-warning" role="status">
+            <strong>Firebase ainda não configurado no servidor.</strong>
+            Configure a chave privada da conta de serviço fora do repositório e defina <code>FIREBASE_SERVICE_ACCOUNT_FILE</code>. Nunca envie o arquivo JSON pelo chat ou faça commit dele.
+          </div>
+          <% } else { %>
+          <div class="alert alert-success" role="status">
+            Credencial do Firebase encontrada. O envio desta tela é individual, para um token FCM válido.
+          </div>
+          <% } %>
+
+          <div class="card shadow border border-0">
+            <div class="card-body">
+              <form id="sendNotificationForm" novalidate>
+                <div class="mb-3">
+                  <label for="notificationToken" class="form-label">Token FCM do dispositivo</label>
+                  <textarea class="form-control" id="notificationToken" rows="3" maxlength="4096" autocomplete="off" required placeholder="Cole aqui o token de registro FCM do aparelho"></textarea>
+                  <div class="form-text">O painel ainda não recebe automaticamente os tokens dos aparelhos. Para enviar a todos ou selecionar usuários, será necessário integrar o registro de tokens do APK.</div>
+                </div>
+                <div class="mb-3">
+                  <label for="notificationTitle" class="form-label">Título</label>
+                  <input type="text" class="form-control" id="notificationTitle" maxlength="150" required placeholder="Título da notificação">
+                </div>
+                <div class="mb-3">
+                  <label for="notificationMessage" class="form-label">Mensagem</label>
+                  <textarea class="form-control" id="notificationMessage" rows="4" maxlength="2000" required placeholder="Digite a mensagem que aparecerá no aplicativo"></textarea>
+                </div>
+                <div class="mb-3">
+                  <label for="notificationImage" class="form-label">URL da imagem (opcional)</label>
+                  <input type="url" class="form-control" id="notificationImage" maxlength="2048" placeholder="https://exemplo.com/imagem.jpg">
+                  <div class="form-text">Use uma URL HTTPS pública. O APK identificado no projeto aceita a imagem como parte da notificação.</div>
+                </div>
+                <div id="notificationResult" class="alert d-none" role="status" aria-live="polite"></div>
+                <button type="submit" class="btn btn-primary" id="sendNotificationButton" <%= it.firebaseConfigured ? '' : 'disabled' %>>
+                  <i class="bi bi-send me-1" aria-hidden="true"></i>Enviar notificação
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../static/js/sidebar.js"></script>
+  <script src="../static/js/dark_light.js?v=20261124-azpro"></script>
+  <script>
+    const form = document.querySelector('#sendNotificationForm');
+    const sendButton = document.querySelector('#sendNotificationButton');
+    const resultBox = document.querySelector('#notificationResult');
+    let csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+
+      const payload = {
+        token: document.querySelector('#notificationToken').value.trim(),
+        title: document.querySelector('#notificationTitle').value.trim(),
+        message: document.querySelector('#notificationMessage').value.trim(),
+        imageUrl: document.querySelector('#notificationImage').value.trim(),
+      };
+      const confirmation = `Enviar para o aparelho indicado?\n\n${payload.title}\n${payload.message}`;
+      if (!window.confirm(confirmation)) return;
+
+      sendButton.disabled = true;
+      resultBox.className = 'alert alert-info';
+      resultBox.textContent = 'Enviando notificação…';
+      try {
+        const response = await fetch('/notifications/send', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'csrf-token': csrfToken },
+          body: JSON.stringify(payload),
+        });
+        const refreshedCsrf = response.headers.get('csrf-token');
+        if (refreshedCsrf) csrfToken = refreshedCsrf;
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.message || 'Não foi possível enviar a notificação.');
+        resultBox.className = 'alert alert-success';
+        resultBox.textContent = `Notificação enviada ao FCM. Identificador: ${result.messageId}`;
+      } catch (error) {
+        resultBox.className = 'alert alert-danger';
+        resultBox.textContent = error.message || 'Erro ao enviar notificação.';
+      } finally {
+        sendButton.disabled = <%= it.firebaseConfigured ? 'false' : 'true' %>;
+      }
+    });
+  </script>
+</body>
+</html>

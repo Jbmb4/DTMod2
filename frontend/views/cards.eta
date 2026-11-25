@@ -67,11 +67,17 @@
 
   <section aria-labelledby="dashboard-subscription-title" class="dashboard-section dashboard-subscription">
     <%
-      const expiryTimestamp = it.user.access_expires_at ? new Date(it.user.access_expires_at).getTime() : NaN;
+      const hasExpiration = it.user.access_expires_at !== null && it.user.access_expires_at !== undefined && it.user.access_expires_at !== '';
+      const expiryTimestamp = hasExpiration ? new Date(it.user.access_expires_at).getTime() : NaN;
       const fallbackDaysRemaining = Number.isFinite(expiryTimestamp)
         ? Math.max(0, Math.ceil((expiryTimestamp - Date.now()) / (1000 * 60 * 60 * 24)))
         : null;
-      const remainingDays = it.daysRemaining ?? fallbackDaysRemaining;
+      const providedDays = it.daysRemaining === null || it.daysRemaining === undefined || String(it.daysRemaining).trim() === ''
+        ? NaN
+        : Number(it.daysRemaining);
+      const remainingDays = Number.isFinite(providedDays)
+        ? Math.max(0, Math.ceil(providedDays))
+        : fallbackDaysRemaining;
     %>
     <div class="dashboard-section-heading">
       <h4 id="dashboard-subscription-title" class="fw-bold"><i class="bi bi-credit-card me-2"></i>Assinatura</h4>
@@ -91,10 +97,12 @@
           <div class="card-body text-center">
             <i class="bi bi-calendar-week dashboard-subscription-icon" aria-hidden="true"></i>
             <h5 class="dashboard-subscription-label">Dias restantes</h5>
-            <% if (remainingDays === null) { %>
+            <% if (!hasExpiration) { %>
               <div class="dashboard-progress dashboard-progress-lifetime" role="status">Vitalício</div>
+            <% } else if (remainingDays === null) { %>
+              <div class="dashboard-progress" role="status">Indisponível</div>
             <% } else { %>
-              <div class="dashboard-progress" role="progressbar" aria-label="Dias restantes da assinatura" aria-valuenow="<%= remainingDays %>" aria-valuemin="0" aria-valuemax="30">
+              <div class="dashboard-progress <%= remainingDays <= 5 ? 'dashboard-progress-warning' : '' %>" role="progressbar" aria-label="Dias restantes da assinatura" aria-valuenow="<%= remainingDays %>" aria-valuemin="0" aria-valuemax="30">
                 <span class="dashboard-progress-value"><%= remainingDays %></span>
               </div>
             <% } %>
@@ -107,8 +115,10 @@
             <i class="bi bi-hourglass-split dashboard-subscription-icon" aria-hidden="true"></i>
             <h5 class="dashboard-subscription-label">Expira em</h5>
             <div class="dashboard-expiration-value">
-              <% if (it.user.access_expires_at) { %>
+              <% if (hasExpiration && Number.isFinite(expiryTimestamp)) { %>
                 <%= it.formatDate(it.user.access_expires_at) %>
+              <% } else if (hasExpiration) { %>
+                Data indisponível
               <% } else { %>
                 <i class="bi bi-infinity me-1" aria-hidden="true"></i>Vitalício
               <% } %>

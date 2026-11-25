@@ -88,6 +88,12 @@ pnpm start
 
 O instalador padrão já inclui a página **Gerenciamento de backup** no painel administrativo. Depois de entrar como administrador, informe o token do bot do Telegram e o ID do seu chat, ative o backup automático e salve. A configuração é criada automaticamente na inicialização do painel; não é necessário executar um comando separado de backup.
 
+### Notificações FCM para o aplicativo
+
+A opção **Notificações** fica disponível para administradores e envia título, mensagem e imagem para um único dispositivo por vez, usando o token FCM do aparelho. O envio usa FCM HTTP v1. No Firebase Console, confirme o projeto `dtunnel-ec825`, habilite Firebase Cloud Messaging API (V1) e gere uma chave privada JSON em **Configurações do projeto → Contas de serviço**. Mantenha o arquivo fora deste repositório, por exemplo em `/etc/dtunnel/firebase-admin.json`, com permissões restritas ao usuário do processo. Defina `FIREBASE_PROJECT_ID=dtunnel-ec825` e `FIREBASE_SERVICE_ACCOUNT_FILE=/etc/dtunnel/firebase-admin.json` no `.env` do servidor. Nunca publique ou envie o JSON privado pelo chat.
+
+O APK incluído ainda não foi confirmado como registrando os tokens FCM no backend. Portanto, a tela oferece envio individual quando o token do aparelho estiver disponível; envio em massa ou seleção por usuário exige integrar o registro desses tokens no aplicativo e no servidor.
+
 ### Atualização do painel no VPS
 
 O comando manual de atualização do VPS fica na pasta `/root/Dtmod`. Ele baixa `origin/main` com fast-forward, instala as dependências, regenera o Prisma Client, aplica `migrate deploy` **somente se o intervalo trouxer um arquivo `migration.sql`**, compila o projeto e reinicia o processo correto do PM2. Sem alteração de schema/migrations, não toca no banco:

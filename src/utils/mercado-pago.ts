@@ -23,7 +23,7 @@ export async function createMercadoPagoPixPayment(input: {
     },
     body: JSON.stringify({
       transaction_amount: input.amountCents / 100,
-      description: 'Colaboradores MB4Nexus',
+      description: 'Colaboradores DTMod - AZPRO',
       payment_method_id: 'pix',
       payer: {
         email: input.payerEmail,

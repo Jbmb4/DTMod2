@@ -86,7 +86,7 @@ main.d-flex > .container-fluid,
 }
 
 
-/* MB4NEXUS visual system */
+/* DTMod - AZPRO visual system */
 :root {
     --panel-bg: #0b1220;
     --panel-surface: #121b2b;
@@ -94,9 +94,9 @@ main.d-flex > .container-fluid,
     --panel-border: rgba(129, 169, 231, 0.17);
     --panel-text: #f3f7ff;
     --panel-muted: #94a5bf;
-    --panel-accent: #0f766e;
-    --panel-accent-rgb: 15, 118, 110;
-    --panel-accent-strong: #0f766e;
+    --panel-accent: #3867f2;
+    --panel-accent-rgb: 56, 103, 242;
+    --panel-accent-strong: #3867f2;
     --panel-accent-ink: #ffffff;
 }
 
@@ -855,6 +855,10 @@ select optgroup {
     background: #159764;
 }
 
+.dashboard-progress-warning {
+    background: #ed303c;
+}
+
 .dashboard-expiration-card {
     background: linear-gradient(145deg, #172538, #111c2d) !important;
 }
@@ -995,14 +999,14 @@ body {
     box-shadow: 0 0 0 2px rgba(var(--panel-accent-rgb), 0.55);
 }
 
-.panel-theme-swatch[data-panel-theme='violet'] { background: #8b5cf6; }
-.panel-theme-swatch[data-panel-theme='sky'] { background: #38bdf8; }
-.panel-theme-swatch[data-panel-theme='mint'] { background: #34d399; }
-.panel-theme-swatch[data-panel-theme='orange'] { background: #e87524; }
-.panel-theme-swatch[data-panel-theme='navy'] { background: #3b82f6; }
-.panel-theme-swatch[data-panel-theme='pink'] { background: #d9469a; }
-.panel-theme-swatch[data-panel-theme='teal'] { background: #14b8a6; }
-.panel-theme-swatch[data-panel-theme='amber'] { background: #b98a00; }
+.panel-theme-swatch[data-panel-theme='blue'] { background: #3867f2; }
+.panel-theme-swatch[data-panel-theme='green'] { background: #20c997; }
+.panel-theme-swatch[data-panel-theme='purple'] { background: #7a4de8; }
+.panel-theme-swatch[data-panel-theme='orange'] { background: #f0653f; }
+.panel-theme-swatch[data-panel-theme='lightblue'] { background: #55a0e6; }
+.panel-theme-swatch[data-panel-theme='pink'] { background: #e12e68; }
+.panel-theme-swatch[data-panel-theme='cyan'] { background: #00c6c8; }
+.panel-theme-swatch[data-panel-theme='yellow'] { background: #e4b000; }
 
 .form-control:focus,
 .form-select:focus,
@@ -1060,4 +1064,14 @@ input:focus {
     .panel-theme-palette {
         right: -3.2rem;
     }
+}
+
+.sidebar .nav-link.active,
+.sidebar .nav-link:hover,
+.sidebar .nav-link:focus {
+    background: rgba(var(--panel-accent-rgb), 0.2) !important;
+}
+
+.sidebar .nav-link.active {
+    box-shadow: inset 3px 0 0 var(--panel-accent) !important;
 }

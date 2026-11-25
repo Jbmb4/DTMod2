@@ -1,16 +1,16 @@
 const PANEL_THEMES = {
-  violet: { accent: '#7c3aed', rgb: '124, 58, 237', ink: '#ffffff' },
-  sky: { accent: '#0284c7', rgb: '2, 132, 199', ink: '#ffffff' },
-  mint: { accent: '#059669', rgb: '5, 150, 105', ink: '#ffffff' },
-  orange: { accent: '#c2410c', rgb: '194, 65, 12', ink: '#ffffff' },
-  navy: { accent: '#1d4ed8', rgb: '29, 78, 216', ink: '#ffffff' },
-  pink: { accent: '#be185d', rgb: '190, 24, 93', ink: '#ffffff' },
-  teal: { accent: '#0f766e', rgb: '15, 118, 110', ink: '#ffffff' },
-  amber: { accent: '#a16207', rgb: '161, 98, 7', ink: '#ffffff' },
+  blue: { accent: '#3867f2', rgb: '56, 103, 242', ink: '#ffffff' },
+  green: { accent: '#20c997', rgb: '32, 201, 151', ink: '#ffffff' },
+  purple: { accent: '#7a4de8', rgb: '122, 77, 232', ink: '#ffffff' },
+  orange: { accent: '#f0653f', rgb: '240, 101, 63', ink: '#ffffff' },
+  lightblue: { accent: '#55a0e6', rgb: '85, 160, 230', ink: '#ffffff' },
+  pink: { accent: '#e12e68', rgb: '225, 46, 104', ink: '#ffffff' },
+  cyan: { accent: '#00c6c8', rgb: '0, 198, 200', ink: '#ffffff' },
+  yellow: { accent: '#e4b000', rgb: '228, 176, 0', ink: '#ffffff' },
 };
 
 const applyPanelTheme = (themeName) => {
-  const selectedName = Object.prototype.hasOwnProperty.call(PANEL_THEMES, themeName) ? themeName : 'teal';
+  const selectedName = Object.prototype.hasOwnProperty.call(PANEL_THEMES, themeName) ? themeName : 'blue';
   const selectedTheme = PANEL_THEMES[selectedName];
   const root = document.documentElement;
 
@@ -35,17 +35,21 @@ const setLightMode = setDarkMode;
 const swithTheme = setDarkMode;
 
 setDarkMode();
-let savedPanelTheme = 'teal';
+let savedPanelTheme = 'blue';
 try {
-  savedPanelTheme = localStorage.getItem('dtmod-panel-theme') || 'teal';
+  savedPanelTheme = localStorage.getItem('dtmod-panel-theme') || 'blue';
 } catch (_) {
   // Use the default palette if the browser blocks local storage.
 }
 applyPanelTheme(savedPanelTheme);
 
 document.addEventListener('DOMContentLoaded', () => {
-  const swatches = document.querySelectorAll('.panel-theme-swatch');
-  swatches.forEach((swatch) => {
+  const headerTrigger = document.querySelector('#toggle-theme-btn');
+  const headerPalette = document.querySelector('#theme-palette');
+  const loginTrigger = document.querySelector('#signin-theme-trigger');
+  const loginPalette = document.querySelector('#signin-theme-palette');
+
+  document.querySelectorAll('.panel-theme-swatch').forEach((swatch) => {
     swatch.addEventListener('click', () => {
       const themeName = swatch.dataset.panelTheme;
       applyPanelTheme(themeName);
@@ -54,36 +58,44 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (_) {
         // The selected theme still applies to this page if storage is unavailable.
       }
-      document.querySelector('#toggle-theme-btn')?.focus();
-      const palette = document.querySelector('#theme-palette');
-      const trigger = document.querySelector('#toggle-theme-btn');
-      if (palette && trigger) {
-        palette.hidden = true;
-        trigger.setAttribute('aria-expanded', 'false');
+
+      if (headerPalette && headerTrigger) {
+        headerPalette.hidden = true;
+        headerTrigger.setAttribute('aria-expanded', 'false');
+      }
+      if (loginPalette && loginTrigger) {
+        loginPalette.hidden = true;
+        loginTrigger.setAttribute('aria-expanded', 'false');
       }
     });
   });
 
-  const trigger = document.querySelector('#toggle-theme-btn');
-  const palette = document.querySelector('#theme-palette');
-  if (!trigger || !palette) return;
+  if (headerTrigger && headerPalette) {
+    const closeHeaderPalette = () => {
+      headerPalette.hidden = true;
+      headerTrigger.setAttribute('aria-expanded', 'false');
+    };
 
-  const closePalette = () => {
-    palette.hidden = true;
-    trigger.setAttribute('aria-expanded', 'false');
-  };
+    headerTrigger.addEventListener('click', () => {
+      const isOpening = headerPalette.hidden;
+      headerPalette.hidden = !isOpening;
+      headerTrigger.setAttribute('aria-expanded', String(isOpening));
+    });
 
-  trigger.addEventListener('click', () => {
-    const isOpening = palette.hidden;
-    palette.hidden = !isOpening;
-    trigger.setAttribute('aria-expanded', String(isOpening));
-  });
+    document.addEventListener('click', (event) => {
+      if (!headerPalette.contains(event.target) && !headerTrigger.contains(event.target)) closeHeaderPalette();
+    });
 
-  document.addEventListener('click', (event) => {
-    if (!palette.contains(event.target) && !trigger.contains(event.target)) closePalette();
-  });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeHeaderPalette();
+    });
+  }
 
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') closePalette();
-  });
+  if (loginTrigger && loginPalette) {
+    loginTrigger.addEventListener('click', () => {
+      const isOpening = loginPalette.hidden;
+      loginPalette.hidden = !isOpening;
+      loginTrigger.setAttribute('aria-expanded', String(isOpening));
+    });
+  }
 });
