@@ -55,9 +55,13 @@
                   <textarea class="form-control" id="notificationMessage" rows="4" maxlength="2000" required placeholder="Digite a mensagem que aparecerá no aplicativo"></textarea>
                 </div>
                 <div class="mb-3">
-                  <label for="notificationImage" class="form-label">URL da imagem (opcional)</label>
+                  <label for="notificationImageFile" class="form-label">Imagem da notificação (opcional)</label>
+                  <input type="file" class="form-control" id="notificationImageFile" accept="image/*" aria-describedby="notificationImageHelp">
+                  <div id="notificationImageHelp" class="form-text">Escolha uma imagem de até 1 MB para enviar. Se preferir, informe uma URL HTTPS pública abaixo.</div>
+                  <div id="notificationImageUploadStatus" class="form-text" role="status" aria-live="polite"></div>
+                  <img id="notificationImagePreview" class="img-fluid rounded mt-2 d-none" alt="Prévia da imagem da notificação" style="max-height: 220px; object-fit: contain;">
+                  <label for="notificationImage" class="form-label mt-2">Ou use uma URL HTTPS pública</label>
                   <input type="url" class="form-control" id="notificationImage" maxlength="2048" placeholder="https://exemplo.com/imagem.jpg">
-                  <div class="form-text">Use uma URL HTTPS pública. O APK identificado no projeto aceita a imagem como parte da notificação.</div>
                 </div>
                 <div id="notificationResult" class="alert d-none" role="status" aria-live="polite"></div>
                 <button type="submit" class="btn btn-primary" id="sendNotificationButton" <%= it.firebaseConfigured && it.deviceStoreReady && it.devicesCount > 0 ? '' : 'disabled' %>>
@@ -78,19 +82,110 @@
     const form = document.querySelector('#sendNotificationForm');
     const sendButton = document.querySelector('#sendNotificationButton');
     const resultBox = document.querySelector('#notificationResult');
+    const imageFileInput = document.querySelector('#notificationImageFile');
+    const imageUrlInput = document.querySelector('#notificationImage');
+    const imagePreview = document.querySelector('#notificationImagePreview');
+    const imageUploadStatus = document.querySelector('#notificationImageUploadStatus');
     let csrfToken = document.querySelector('meta[name="csrf-token"]').content;
     const canSend = <%= it.firebaseConfigured && it.deviceStoreReady && it.devicesCount > 0 ? 'true' : 'false' %>;
+    let isImageUploading = false;
+
+    const syncSendButton = () => {
+      sendButton.disabled = !canSend || isImageUploading;
+    };
+
+    const hideImagePreview = () => {
+      imagePreview.classList.add('d-none');
+      imagePreview.removeAttribute('src');
+    };
+
+    imageFileInput.addEventListener('change', async () => {
+      const file = imageFileInput.files && imageFileInput.files[0];
+      imageUploadStatus.className = 'form-text';
+      imageUploadStatus.textContent = '';
+      if (!file) return;
+
+      imageUrlInput.value = '';
+      hideImagePreview();
+      if (!file.type.startsWith('image/')) {
+        imageUploadStatus.className = 'form-text text-danger';
+        imageUploadStatus.textContent = 'Selecione um arquivo de imagem.';
+        imageFileInput.value = '';
+        return;
+      }
+      if (file.size > 1024 * 1024) {
+        imageUploadStatus.className = 'form-text text-danger';
+        imageUploadStatus.textContent = 'A imagem precisa ter no máximo 1 MB.';
+        imageFileInput.value = '';
+        return;
+      }
+
+      isImageUploading = true;
+      imageFileInput.disabled = true;
+      syncSendButton();
+      imageUploadStatus.textContent = 'Enviando imagem…';
+      const uploadData = new FormData();
+      uploadData.append('file', file);
+
+      try {
+        const response = await fetch('/upload/image', { method: 'POST', body: uploadData });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.url) {
+          throw new Error(result.message || 'Não foi possível enviar a imagem.');
+        }
+
+        const uploadedImage = new URL(result.url, window.location.origin);
+        if (uploadedImage.protocol !== 'https:') {
+          throw new Error('O servidor retornou um endereço sem HTTPS; a imagem não pode ser usada na notificação.');
+        }
+        imageUrlInput.value = uploadedImage.href;
+        imagePreview.src = uploadedImage.href;
+        imagePreview.classList.remove('d-none');
+        imageUploadStatus.className = 'form-text text-success';
+        imageUploadStatus.textContent = 'Imagem enviada e pronta para a notificação.';
+      } catch (error) {
+        imageUrlInput.value = '';
+        hideImagePreview();
+        imageFileInput.value = '';
+        imageUploadStatus.className = 'form-text text-danger';
+        imageUploadStatus.textContent = error.message || 'Não foi possível enviar a imagem.';
+      } finally {
+        isImageUploading = false;
+        imageFileInput.disabled = false;
+        syncSendButton();
+      }
+    });
+
+    imageUrlInput.addEventListener('input', () => {
+      hideImagePreview();
+      if (!imageUrlInput.value.trim()) return;
+      try {
+        const imageUrl = new URL(imageUrlInput.value.trim());
+        if (imageUrl.protocol === 'https:') {
+          imagePreview.src = imageUrl.href;
+          imagePreview.classList.remove('d-none');
+        }
+      } catch (_) {
+        // A rota de envio apresenta a validação final da URL.
+      }
+    });
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (!canSend || !form.reportValidity()) return;
+      if (isImageUploading) {
+        resultBox.className = 'alert alert-warning';
+        resultBox.textContent = 'Aguarde o término do envio da imagem.';
+        return;
+      }
 
       const payload = {
         title: document.querySelector('#notificationTitle').value.trim(),
         message: document.querySelector('#notificationMessage').value.trim(),
-        imageUrl: document.querySelector('#notificationImage').value.trim(),
+        imageUrl: imageUrlInput.value.trim(),
       };
-      const confirmation = `Enviar para ${<%= it.devicesCount %>} aparelho(s) vinculado(s) somente a esta conta?\n\n${payload.title}\n${payload.message}`;
+      const imageConfirmation = payload.imageUrl ? '\nImagem incluída.' : '';
+      const confirmation = `Enviar para ${<%= it.devicesCount %>} aparelho(s) vinculado(s) somente a esta conta?\n\n${payload.title}\n${payload.message}${imageConfirmation}`;
       if (!window.confirm(confirmation)) return;
 
       sendButton.disabled = true;
@@ -112,7 +207,7 @@
         resultBox.className = 'alert alert-danger';
         resultBox.textContent = error.message || 'Erro ao enviar notificação.';
       } finally {
-        sendButton.disabled = !canSend;
+        syncSendButton();
       }
     });
   </script>
