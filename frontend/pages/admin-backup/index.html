@@ -102,6 +102,6 @@
       try { const body = new FormData(); body.append('backup', document.getElementById('backupFile').files[0]); const response = await fetch('/admin/backup/import', { method: 'POST', headers: { 'csrf-token': csrfToken }, body }); const refreshed = getCsrfTokenRefresh(response); if (refreshed) csrfToken = refreshed; const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.message || data.error || 'Não foi possível importar o backup.'); showToastSuccess(data.message); document.getElementById('backupFile').value = ''; } catch (error) { showToastError(error.message); } finally { setBusy('importBackup', false); }
     });
   </script>
-  <script src="../static/js/dark_light.js?v=20261124-azpro"></script>
+  <script src="../static/js/dark_light.js?v=20261125-palette-fix"></script>
 </body>
 </html>

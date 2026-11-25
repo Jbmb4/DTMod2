@@ -48,6 +48,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const headerPalette = document.querySelector('#theme-palette');
   const loginTrigger = document.querySelector('#signin-theme-trigger');
   const loginPalette = document.querySelector('#signin-theme-palette');
+  const paletteControls = [
+    [headerTrigger, headerPalette],
+    [loginTrigger, loginPalette],
+  ].filter(([trigger, palette]) => trigger && palette);
+  const setPaletteExpanded = (trigger, palette, expanded) => {
+    palette.hidden = !expanded;
+    trigger.setAttribute('aria-expanded', String(expanded));
+  };
+  const closeAllPalettes = () => {
+    paletteControls.forEach(([trigger, palette]) => setPaletteExpanded(trigger, palette, false));
+  };
+
+  closeAllPalettes();
 
   document.querySelectorAll('.panel-theme-swatch').forEach((swatch) => {
     swatch.addEventListener('click', () => {
@@ -70,32 +83,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  if (headerTrigger && headerPalette) {
-    const closeHeaderPalette = () => {
-      headerPalette.hidden = true;
-      headerTrigger.setAttribute('aria-expanded', 'false');
-    };
-
-    headerTrigger.addEventListener('click', () => {
-      const isOpening = headerPalette.hidden;
-      headerPalette.hidden = !isOpening;
-      headerTrigger.setAttribute('aria-expanded', String(isOpening));
+  paletteControls.forEach(([trigger, palette]) => {
+    trigger.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setPaletteExpanded(trigger, palette, palette.hidden);
     });
+  });
 
+  if (paletteControls.length) {
     document.addEventListener('click', (event) => {
-      if (!headerPalette.contains(event.target) && !headerTrigger.contains(event.target)) closeHeaderPalette();
+      paletteControls.forEach(([trigger, palette]) => {
+        if (!palette.contains(event.target) && !trigger.contains(event.target)) {
+          setPaletteExpanded(trigger, palette, false);
+        }
+      });
     });
 
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') closeHeaderPalette();
-    });
-  }
-
-  if (loginTrigger && loginPalette) {
-    loginTrigger.addEventListener('click', () => {
-      const isOpening = loginPalette.hidden;
-      loginPalette.hidden = !isOpening;
-      loginTrigger.setAttribute('aria-expanded', String(isOpening));
+      if (event.key === 'Escape') closeAllPalettes();
     });
   }
 });

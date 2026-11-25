@@ -75,10 +75,10 @@
 
         </section>
         <div class="signin-theme-control">
-            <button id="signin-theme-trigger" class="signin-theme-trigger" type="button" aria-label="Mostrar cores do painel" aria-haspopup="true" aria-expanded="true" aria-controls="signin-theme-palette">
+            <button id="signin-theme-trigger" class="signin-theme-trigger" type="button" aria-label="Mostrar cores do painel" aria-haspopup="true" aria-expanded="false" aria-controls="signin-theme-palette">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.2a2 2 0 0 0 1.4-3.4 1.5 1.5 0 0 1 1.1-2.6H18a3 3 0 0 0 3-3c0-5-4-9-9-9Zm-4 9.2a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Zm3-3.8a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Zm4 0a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Zm3 3.8a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Z" fill="currentColor"/></svg>
             </button>
-            <div id="signin-theme-palette" class="signin-theme-picker" role="group" aria-label="Escolha a cor do painel">
+            <div id="signin-theme-palette" class="signin-theme-picker" role="group" aria-label="Escolha a cor do painel" hidden>
                 <button class="panel-theme-swatch signin-theme-swatch" type="button" data-panel-theme="blue" aria-label="Azul" title="Azul"></button>
                 <button class="panel-theme-swatch signin-theme-swatch" type="button" data-panel-theme="green" aria-label="Verde" title="Verde"></button>
                 <button class="panel-theme-swatch signin-theme-swatch" type="button" data-panel-theme="purple" aria-label="Roxo" title="Roxo"></button>
@@ -91,7 +91,7 @@
         </div>
     </main>
 
-    <script src="../static/js/dark_light.js?v=20261124-azpro"></script>
+    <script src="../static/js/dark_light.js?v=20261125-palette-fix"></script>
     <script src="../static/js/utils.js"></script>
     <script>
         const Elements = {
