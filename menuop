@@ -168,50 +168,30 @@ while true; do
             if [ -z "$domain" ]; then
                 echo -e "${RED}Dominio invalido!${NC}"
             else
-                # O menu CLI não possui uma sessão web; use o usuário cadastrado
-                # no banco para que a APK receba um user_id válido automaticamente.
-                DATABASE_URL=$(grep "^DATABASE_URL=" "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d '\"')
-                DB_PATH=$(python3 - "$PANEL_DIR" "$DATABASE_URL" <<'PY'
-from pathlib import Path
-import sys
-
-panel_dir = Path(sys.argv[1])
-url = sys.argv[2]
-path = Path(url[5:] if url.startswith("file:") else url)
-if not path.is_absolute():
-    path = panel_dir / "prisma" / path
-print(path.resolve())
-PY
-)
-                USER_ID=$(python3 - "$DB_PATH" <<'PY'
-import sqlite3
-import sys
-
-try:
-    with sqlite3.connect(sys.argv[1]) as db:
-        row = db.execute("SELECT id FROM users ORDER BY created_at LIMIT 1").fetchone()
-    print(row[0] if row else "")
-except Exception:
-    print("")
-PY
-)
-                if [ -z "$USER_ID" ]; then
-                    echo -e "${RED}Não foi possível obter o user_id no banco do painel.${NC}"
+                # A geração via menuop também precisa registrar a chave FCM
+                # por conta e repassá-la ao gerador em uma variável de ambiente.
+                OUTPUT_APK="/home/ubuntu/dtmod-custom.apk"
+                APK_SRC=""
+                rm -f "$OUTPUT_APK" "$HOME/dtmod-custom.apk"
+                if REGISTRATION_DATA=$(python3 "$PANEL_DIR/scripts/prepare_cli_apk_registration.py" "$PANEL_DIR" create); then
+                    IFS=$'\t' read -r USER_ID REGISTRATION_KEY <<< "$REGISTRATION_DATA"
+                    if [ -z "$USER_ID" ] || [ -z "$REGISTRATION_KEY" ]; then
+                        echo -e "${RED}Não foi possível preparar o registro FCM no banco do painel.${NC}"
+                    else
+                        echo -e "${YELLOW}Iniciando geracao do APK para: $domain${NC}"
+                        echo -e "${CYAN}user_id aplicado automaticamente: $USER_ID${NC}"
+                        if DTUNNEL_FCM_REGISTRATION_KEY="$REGISTRATION_KEY" python3 "$PANEL_DIR/scripts/generate_apk.py" "$domain" "$USER_ID" "$OUTPUT_APK" && [ -s "$OUTPUT_APK" ]; then
+                            APK_SRC="$OUTPUT_APK"
+                        else
+                            printf '%s' "$REGISTRATION_KEY" | python3 "$PANEL_DIR/scripts/prepare_cli_apk_registration.py" "$PANEL_DIR" revoke
+                            echo -e "${RED}Falha no build; a chave temporária de registro FCM foi removida.${NC}"
+                        fi
+                    fi
                 else
-                    echo -e "${YELLOW}Iniciando geracao do APK para: $domain${NC}"
-                    echo -e "${CYAN}user_id aplicado automaticamente: $USER_ID${NC}"
-                    python3 "$PANEL_DIR/scripts/generate_apk.py" "$domain" "$USER_ID" "/home/ubuntu/dtmod-custom.apk"
+                    echo -e "${RED}Não foi possível preparar o registro FCM para este APK.${NC}"
                 fi
 
-                if [ -f "/home/ubuntu/dtmod-custom.apk" ]; then
-                    APK_SRC="/home/ubuntu/dtmod-custom.apk"
-                elif [ -f "$HOME/dtmod-custom.apk" ]; then
-                    APK_SRC="$HOME/dtmod-custom.apk"
-                else
-                    APK_SRC=""
-                fi
-
-                if [ -n "$APK_SRC" ]; then
+                if [ -n "$APK_SRC" ] && [ -s "$APK_SRC" ]; then
                     mkdir -p "$PANEL_DIR/frontend/public/downloads"
                     chmod 777 "$PANEL_DIR/frontend/public/downloads"
                     # Copiar para o diretório de downloads do painel
