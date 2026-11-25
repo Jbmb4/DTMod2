@@ -309,3 +309,29 @@
 .application-screen .application-preview-card {
     box-shadow: none !important;
 }
+
+.application-screen .app-actions {
+    width: min(100%, 320px);
+}
+
+.application-screen #app-pagination {
+    width: 100%;
+    min-width: 0;
+}
+
+.application-screen #app-pagination nav,
+.application-screen #app-pagination .pagination {
+    margin-bottom: 0;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 767px) {
+    .application-screen .app-actions {
+        width: 100%;
+    }
+
+    .application-screen #app .app-card,
+    .application-screen #app > div {
+        max-width: 100%;
+    }
+}

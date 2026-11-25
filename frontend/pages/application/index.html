@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <link rel="stylesheet" href="/static/css/styles.css?v=20261125-mobile">
   <link rel="stylesheet" href="/static/css/bootstrap.css">
-  <link rel="stylesheet" href="/static/css/sidebar.css?v=20261124-azpro">
+  <link rel="stylesheet" href="/static/css/sidebar.css?v=20261125-layoutfix">
   <link rel="stylesheet" href="/static/css/header.css?v=20261125-brand">
   <link rel="stylesheet" href="/static/css/app_config_custom.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css">
@@ -51,8 +51,8 @@
                 </select>
               </div>
 
-              <div class="d-flex flex-column">
-                <div class="d-flex mb-1" style="min-width: 300px;">
+              <div class="d-flex flex-column app-actions">
+                <div class="d-flex mb-1">
                   <button type="button" class="__create btn btn-dark flex-fill me-1 w-50">
                     <i class="bi bi-plus-lg"></i>
                     <span>NOVO</span>
@@ -73,6 +73,7 @@
 
             <div class="row m-auto mb-3 center-column" id="app">
             </div>
+            <div id="app-pagination"></div>
 
             <div class="d-flex justify-content-center align-items-center mt-5" id="loading">
               <div class="spinner-border p-5" role="status">
@@ -141,7 +142,7 @@
   </script>
 
   <script src="/static/js/dark_light.js?v=20261124-azpro"></script>
-  <script type="module" src="../static/js/app_config/main.js?v=20261125-pagination"></script>
+  <script type="module" src="../static/js/app_config/main.js?v=20261125-layoutfix"></script>
 
 </body>
 

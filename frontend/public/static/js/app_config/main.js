@@ -1,4 +1,3 @@
-import { InternalError } from "../common/errors.js";
 import { AppConfigAdvancedViewFooter, AppConfigViewFooter } from "./components/footer.js";
 import CardDefault from "./components/card.js";
 import {
@@ -298,7 +297,7 @@ const setListener = (appConfigList) => {
 }
 
 const renderApp = appConfigList => {
-    const root = document.querySelector('.row');
+    const root = document.querySelector('#app');
     root.innerHTML = '';
 
     if (appConfigList.items.length == 0)
@@ -368,6 +367,7 @@ const main = async () => {
 
         const offset = pagination.offset;
         const limit = pagination.limit;
+        const appRoot = document.querySelector('#app');
 
         try {
 
@@ -378,29 +378,43 @@ const main = async () => {
             const csrfTokenRefresh = getCsrfTokenRefresh(response);
             if (csrfTokenRefresh) csrfToken = csrfTokenRefresh;
 
-            const data = await response.json();
-            const items = data.data.result || data.data;
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.message || `Falha ao carregar aplicativos (HTTP ${response.status}).`);
+            }
+            const pageData = data.data || {};
+            const items = Array.isArray(pageData.result) ? pageData.result : Array.isArray(pageData) ? pageData : null;
+            if (!items) throw new Error('O servidor retornou uma lista de aplicativos inválida.');
 
-            pagination.offset = data.data.offset || 1;
-            pagination.limit = data.data.limit || 25;
-            pagination.total = data.data.total || items.length;
+            pagination.offset = Number(pageData.offset) || offset;
+            pagination.limit = Number(pageData.limit) || limit;
+            pagination.total = Number.isFinite(Number(pageData.total)) ? Number(pageData.total) : items.length;
             pagination.render();
 
             items.forEach(item => appConfigList.add(AppConfig.fromJson(item)));
             renderApp(appConfigList);
-            closeLoading();
+            if (items.length === 0) {
+                appRoot.innerHTML = '<div class="col-12"><div class="alert alert-secondary mb-0">Nenhum aplicativo encontrado para este filtro. Use <strong>NOVO</strong> ou <strong>IMPORTAR</strong> para começar.</div></div>';
+            }
 
         } catch (e) {
-            console.log(e)
-            const error = new InternalError(document.querySelector('.content'));
-            error.render();
-            return;
+            console.error('Falha ao carregar aplicativos:', e);
+            appRoot.innerHTML = '';
+            const alert = document.createElement('div');
+            alert.className = 'col-12 alert alert-danger';
+            alert.setAttribute('role', 'alert');
+            alert.textContent = e instanceof Error ? e.message : 'Não foi possível carregar os aplicativos. Tente novamente.';
+            appRoot.appendChild(alert);
+            pagination.total = 0;
+            pagination.render();
+        } finally {
+            closeLoading();
         }
     }
 
     await getConfigApp();
 
-    pagination.root = document.querySelector('.content');
+    pagination.root = document.querySelector('#app-pagination');
     pagination.mount();
     pagination.setOnPageChange(() => {
         showLoading();
