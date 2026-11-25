@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import Authentication from '../../middlewares/authentication';
 import { FastifyReply, FastifyRequest, RouteOptions } from 'fastify';
 import prisma from '../../config/prisma-client';
+import isPrismaMissingTable from '../../utils/is-prisma-missing-table';
 
 const GENERATOR = path.resolve(process.cwd(), 'scripts', 'generate_apk.py');
 
@@ -86,7 +87,19 @@ export default {
     const registrationKeyHash = crypto.createHash('sha256').update(registrationKey, 'utf8').digest('hex');
     const outputName = `custom-${userId}-${jobId}.${format}`;
     const outputPath = path.join(os.tmpdir(), outputName);
-    await prisma.deviceRegistrationKey.create({ data: { key_hash: registrationKeyHash, user_id: userId } });
+    try {
+      await prisma.deviceRegistrationKey.create({ data: { key_hash: registrationKeyHash, user_id: userId } });
+    } catch (error) {
+      if (isPrismaMissingTable(error)) {
+        req.log.error({ err: error }, 'A tabela device_registration_keys ainda não está disponível após a inicialização do painel.');
+        return reply.status(503).send({
+          success: false,
+          code: 'DATABASE_SCHEMA_UNAVAILABLE',
+          message: 'O banco do painel ainda não disponibilizou uma tabela necessária. Reinicie o painel com a atualização aplicada e confira “pm2 logs DTunnel” se o problema continuar.',
+        });
+      }
+      throw error;
+    }
     const args = [GENERATOR, domain, userId, outputPath];
     if (body.name) args.push('--name', body.name);
     if (body.icon_url) args.push('--icon', body.icon_url);

@@ -2,6 +2,7 @@ import 'dotenv/config';
 import fastify from './http';
 import prisma from './config/prisma-client';
 import { ensureCollaboratorSchema } from './utils/ensure-collaborator-schema';
+import { ensureDeviceRegistrationKeySchema } from './utils/ensure-device-registration-key-schema';
 import { ensureBackupSchema, startBackupScheduler } from './services/backup';
 
 const host = '0.0.0.0';
@@ -10,6 +11,7 @@ const port = Number.parseInt(process.env.PORT ?? '3000', 10);
 async function start() {
   await prisma.$connect();
   await ensureCollaboratorSchema();
+  await ensureDeviceRegistrationKeySchema();
   await ensureBackupSchema();
   startBackupScheduler();
 

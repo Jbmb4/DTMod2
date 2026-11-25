@@ -6,6 +6,7 @@ import Authentication from '../../middlewares/authentication';
 import { FastifyReply, FastifyRequest, RouteOptions } from 'fastify';
 
 const ICONS_DIR = path.resolve(process.cwd(), 'frontend', 'public', 'upload_icons');
+const MAX_ICON_UPLOAD_BYTES = 15 * 1024 * 1024;
 
 function getPublicDomain(req: FastifyRequest): string {
   const forwardedProto = req.headers['x-forwarded-proto'];
@@ -42,20 +43,31 @@ export default {
   method: 'POST',
   onRequest: [Authentication.user],
   handler: async (req: FastifyRequest, reply: FastifyReply) => {
-    const file = await req.file();
+    let file;
+    let buffer: Buffer;
+    try {
+      file = await req.file({ limits: { fileSize: MAX_ICON_UPLOAD_BYTES } });
 
-    if (!file) {
-      reply.status(400);
-      throw new Error('Arquivo inválido!');
-    }
+      if (!file) {
+        reply.status(400);
+        throw new Error('Arquivo inválido!');
+      }
 
-    if (!/^image\//.test(file.mimetype)) {
-      reply.status(400);
-      throw new Error('Envie apenas arquivos de imagem.');
+      if (!/^image\//.test(file.mimetype)) {
+        reply.status(400);
+        throw new Error('Envie apenas arquivos de imagem.');
+      }
+
+      // O Multipart do Fastify limita arquivos a 1 MB por padrão.
+      buffer = await file.toBuffer();
+    } catch (error) {
+      if ((error as { code?: string })?.code === 'FST_REQ_FILE_TOO_LARGE') {
+        return reply.status(413).send({ status: 413, message: 'A imagem excede o limite de 15 MB. Escolha uma imagem menor.' });
+      }
+      throw error;
     }
 
     // 1) Armazena localmente no próprio painel (caminho sempre funcional)
-    const buffer = await file.toBuffer();
     if (!fs.existsSync(ICONS_DIR)) {
       fs.mkdirSync(ICONS_DIR, { recursive: true });
     }
