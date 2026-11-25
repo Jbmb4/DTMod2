@@ -39,14 +39,12 @@
         <span>Aplicativo</span>
       </a>
     </li>
-    <% if (it.user && it.user.is_admin) { %>
     <li class="nav-item">
       <a href="/notifications" target="_self" class="nav-link text-white <%~ it.active === 'notifications' ? 'active' : '' %>">
         <i class="bi bi-bell"></i>
         <span>Notificações</span>
       </a>
     </li>
-    <% } %>
     <% if (it.user && it.user.is_admin) { %>
     <li class="nav-item">
       <a href="/users" target="_self" class="nav-link text-white <%~ it.active === 'users' ? 'active' : '' %>">

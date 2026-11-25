@@ -5,6 +5,7 @@ import { execFile } from 'child_process';
 import crypto from 'crypto';
 import Authentication from '../../middlewares/authentication';
 import { FastifyReply, FastifyRequest, RouteOptions } from 'fastify';
+import prisma from '../../config/prisma-client';
 
 const GENERATOR = path.resolve(process.cwd(), 'scripts', 'generate_apk.py');
 
@@ -55,9 +56,7 @@ function safeFilenamePart(value: string | undefined, fallback: string): string {
 function getPanelDomain(req: FastifyRequest): string {
   const configured = process.env.PANEL_DOMAIN?.trim();
   if (configured) return configured;
-  const forwardedHost = req.headers['x-forwarded-host'];
-  const host = Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost;
-  return host || req.headers.host || '';
+  return req.headers.host || '';
 }
 
 function cleanupJobs() {
@@ -83,8 +82,11 @@ export default {
 
     const format = body.format === 'aab' ? 'aab' : 'apk';
     const jobId = crypto.randomUUID();
+    const registrationKey = crypto.randomBytes(32).toString('base64url');
+    const registrationKeyHash = crypto.createHash('sha256').update(registrationKey, 'utf8').digest('hex');
     const outputName = `custom-${userId}-${jobId}.${format}`;
     const outputPath = path.join(os.tmpdir(), outputName);
+    await prisma.deviceRegistrationKey.create({ data: { key_hash: registrationKeyHash, user_id: userId } });
     const args = [GENERATOR, domain, userId, outputPath];
     if (body.name) args.push('--name', body.name);
     if (body.icon_url) args.push('--icon', body.icon_url);
@@ -106,10 +108,17 @@ export default {
       cwd: process.cwd(),
       timeout: 15 * 60 * 1000,
       maxBuffer: 10 * 1024 * 1024,
-      env: { ...process.env, PATH: `${process.env.PATH ?? ''}:/usr/local/bin` },
+      env: {
+        ...process.env,
+        PATH: `${process.env.PATH ?? ''}:/usr/local/bin`,
+        DTUNNEL_FCM_REGISTRATION_KEY: registrationKey,
+      },
     }, (error, _stdout, stderr) => {
       try {
         if (error || !fs.existsSync(outputPath)) {
+          void prisma.deviceRegistrationKey.deleteMany({ where: { key_hash: registrationKeyHash } }).catch((cleanupError) => {
+            req.log.error({ err: cleanupError }, 'Unable to remove failed APK registration key');
+          });
           job.status = 'failed';
           job.error = stderr?.trim() || error?.message || 'O gerador não produziu o APK.';
           persistJob(jobId, job);
@@ -129,6 +138,9 @@ export default {
         const cleanupTimer = setTimeout(() => fs.rmSync(finalPath, { force: true }), JOB_TTL);
         cleanupTimer.unref();
       } catch (finalizeError) {
+        void prisma.deviceRegistrationKey.deleteMany({ where: { key_hash: registrationKeyHash } }).catch((cleanupError) => {
+          req.log.error({ err: cleanupError }, 'Unable to remove failed APK registration key');
+        });
         job.status = 'failed';
         job.error = finalizeError instanceof Error ? finalizeError.message : 'Falha ao finalizar o APK.';
         persistJob(jobId, job);

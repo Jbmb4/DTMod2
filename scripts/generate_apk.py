@@ -144,6 +144,76 @@ def update_user_id(work_dir: Path, user_id: str) -> None:
         user_id_file.parent.mkdir(parents=True, exist_ok=True)
     user_id_file.write_text(user_id + "\n", encoding="utf-8")
 
+def install_fcm_registration(work_dir: Path, domain: str, registration_key: str) -> None:
+    if not re.fullmatch(r"[A-Za-z0-9_-]{32,256}", registration_key):
+        raise ValueError("Chave de registro do APK inválida.")
+
+    worker_paths = {
+        path.name: path
+        for path in work_dir.glob("smali*/com/dtunnel/framework/worker/*.smali")
+        if path.name in {"FcmTokenSyncWorker.smali", "MonthlyFcmTokenSyncWorker.smali"}
+    }
+    required_workers = {"FcmTokenSyncWorker.smali", "MonthlyFcmTokenSyncWorker.smali"}
+    missing = sorted(required_workers - worker_paths.keys())
+    if missing:
+        raise RuntimeError("A APK base não contém os sincronizadores FCM esperados: " + ", ".join(missing))
+
+    template_path = SCRIPT_DIR / "PanelFcmTokenRegistrar.smali.template"
+    if not template_path.is_file():
+        raise FileNotFoundError(f"Modelo de registro FCM não encontrado: {template_path}")
+    endpoint = f"https://{domain}/api/fcm/register"
+    registrar = template_path.read_text(encoding="utf-8").replace("__PANEL_REGISTER_URL__", endpoint)
+    registrar_path = worker_paths["FcmTokenSyncWorker.smali"].parent / "PanelFcmTokenRegistrar.smali"
+    registrar_path.write_text(registrar, encoding="utf-8")
+
+    for filename, worker_path in worker_paths.items():
+        source = worker_path.read_text(encoding="utf-8")
+        method_pattern = re.compile(
+            r"(?m)^\.method public final d\(Lfb/c;\)Ljava/lang/Object;\n(?P<body>.*?)(?=^\.end method$)",
+            re.DOTALL,
+        )
+        match = method_pattern.search(source)
+        if not match:
+            raise RuntimeError(f"Método esperado não encontrado em {worker_path}")
+        body = match.group("body")
+        locals_match = re.search(r"(?m)^\s*\.locals\s+(\d+)\s*$", body)
+        if not locals_match or int(locals_match.group(1)) < 1:
+            raise RuntimeError(f"Contagem de registradores Smali inválida em {worker_path}")
+        context_register = f"v{int(locals_match.group(1)) - 1}"
+
+        if filename == "FcmTokenSyncWorker.smali":
+            anchor = "    :try_start_0"
+            registration_call = (
+                f"    iget-object {context_register}, p0, Lj2/u;->a:Landroid/content/Context;\n"
+                f"    invoke-static {{{context_register}, p1}}, "
+                "Lcom/dtunnel/framework/worker/PanelFcmTokenRegistrar;->register(Landroid/content/Context;Ljava/lang/String;)V"
+            )
+        else:
+            anchor = "    check-cast p1, Ljava/lang/String;"
+            registration_call = (
+                f"    iget-object {context_register}, p0, Lj2/u;->a:Landroid/content/Context;\n"
+                f"    invoke-static {{{context_register}, p1}}, "
+                "Lcom/dtunnel/framework/worker/PanelFcmTokenRegistrar;->register(Landroid/content/Context;Ljava/lang/String;)V"
+            )
+
+        method_start, method_end = match.span("body")
+        method_body = source[method_start:method_end]
+        if registration_call in method_body:
+            continue
+        if method_body.count(anchor) != 1:
+            raise RuntimeError(f"Ponto de inserção FCM não encontrado exclusivamente em {worker_path}")
+        updated_body = method_body.replace(anchor, f"{anchor}\n{registration_call}", 1)
+        source = source[:method_start] + updated_body + source[method_end:]
+        worker_path.write_text(source, encoding="utf-8")
+
+    update_registration_key(work_dir, registration_key)
+    print("Registro automático de tokens FCM vinculado à conta instalado nos sincronizadores do APK.")
+
+def update_registration_key(work_dir: Path, registration_key: str) -> None:
+    key_file = work_dir / "assets" / "registration_key.txt"
+    key_file.parent.mkdir(parents=True, exist_ok=True)
+    key_file.write_text(registration_key + "\n", encoding="utf-8")
+
 def update_dtunnelmod_json(work_dir: Path, new_domain: str) -> None:
     dtunnelmod_json = work_dir / "assets" / "dtunnelmod.json"
     if not dtunnelmod_json.is_file():
@@ -461,6 +531,9 @@ def fix_foreground_service_type(work_dir: Path) -> None:
 def generate_apk(args: argparse.Namespace) -> Path:
     script_dir = Path(__file__).resolve().parent
     panel_dir = script_dir.parent
+    registration_key = os.environ.pop("DTUNNEL_FCM_REGISTRATION_KEY", "")
+    if not registration_key:
+        raise ValueError("Chave individual de registro FCM não informada.")
     base_filename = "base_xhttp.apk" if getattr(args, "xhttp", False) else "base.apk"
     apk_path = script_dir / base_filename
     work_dir = panel_dir / "apk_work"
@@ -484,6 +557,7 @@ def generate_apk(args: argparse.Namespace) -> Path:
 
         replace_domains(work_dir, args.domain)
         update_user_id(work_dir, args.user_id)
+        install_fcm_registration(work_dir, args.domain, registration_key)
         update_dtunnelmod_json(work_dir, args.domain)
         
         if args.name:

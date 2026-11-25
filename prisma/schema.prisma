@@ -28,6 +28,8 @@ model User {
   Category  Category[]
   AppConfig AppConfig[]
   AppLayout AppLayout[]
+  DeviceFcmToken DeviceFcmToken[]
+  DeviceRegistrationKey DeviceRegistrationKey[]
 
   @@map("users")
 }
@@ -142,4 +144,29 @@ model AppLayoutStorage {
   app_layout AppLayout @relation(fields: [app_layout_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@map("app_layout_storages")
+}
+
+model DeviceFcmToken {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  user_id    String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([user_id])
+  @@map("device_fcm_tokens")
+}
+
+model DeviceRegistrationKey {
+  id         String   @id @default(cuid())
+  key_hash   String   @unique
+  user_id    String
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([user_id])
+  @@map("device_registration_keys")
 }
