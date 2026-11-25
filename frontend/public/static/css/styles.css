@@ -1116,7 +1116,7 @@ input:focus {
 
 @media (max-width: 420px) {
     .panel-theme-palette {
-        right: -3.2rem;
+        right: 0;
     }
 }
 

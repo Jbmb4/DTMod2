@@ -87,7 +87,8 @@ document.addEventListener('DOMContentLoaded', () => {
     trigger.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
-      setPaletteExpanded(trigger, palette, palette.hidden);
+      const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
+      setPaletteExpanded(trigger, palette, !isExpanded);
     });
   });
 
