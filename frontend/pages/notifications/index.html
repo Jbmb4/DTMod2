@@ -25,7 +25,10 @@
         <div class="main-content-container container-fluid px-4">
           <div class="mb-3">
             <h4 class="fw-bold"><i class="bi bi-bell me-2"></i>Enviar notificação</h4>
-            <p class="text-secondary mb-2">Envie uma notificação para os aparelhos do seu aplicativo vinculados a esta conta.</p>
+            <p class="text-secondary mb-2">
+              Envie uma notificação somente aos aparelhos do seu aplicativo vinculados a esta conta.
+              <% if (it.deviceStoreReady) { %>Aparelhos: <%= it.devicesCount %>.<% } else { %>Banco de notificações aguardando a migration segura.<% } %>
+            </p>
             <hr>
           </div>
 
@@ -39,10 +42,6 @@
             Credencial do Firebase encontrada. O envio fica limitado aos aparelhos desta conta.
           </div>
           <% } %>
-
-          <div class="alert alert-info" role="status">
-            Aparelhos vinculados a esta conta: <strong><%= it.devicesCount %></strong>. O aplicativo gerado registra o token automaticamente quando é aberto e possui conexão com a internet.
-          </div>
 
           <div class="card shadow border border-0">
             <div class="card-body">
@@ -61,7 +60,7 @@
                   <div class="form-text">Use uma URL HTTPS pública. O APK identificado no projeto aceita a imagem como parte da notificação.</div>
                 </div>
                 <div id="notificationResult" class="alert d-none" role="status" aria-live="polite"></div>
-                <button type="submit" class="btn btn-primary" id="sendNotificationButton" <%= it.firebaseConfigured && it.devicesCount > 0 ? '' : 'disabled' %>>
+                <button type="submit" class="btn btn-primary" id="sendNotificationButton" <%= it.firebaseConfigured && it.deviceStoreReady && it.devicesCount > 0 ? '' : 'disabled' %>>
                   <i class="bi bi-send me-1" aria-hidden="true"></i>Enviar notificação
                 </button>
               </form>
@@ -80,7 +79,7 @@
     const sendButton = document.querySelector('#sendNotificationButton');
     const resultBox = document.querySelector('#notificationResult');
     let csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-    const canSend = <%= it.firebaseConfigured && it.devicesCount > 0 ? 'true' : 'false' %>;
+    const canSend = <%= it.firebaseConfigured && it.deviceStoreReady && it.devicesCount > 0 ? 'true' : 'false' %>;
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();

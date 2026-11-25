@@ -4,6 +4,7 @@ import csrfProtection from '../../utils/csrf-protection';
 import prisma from '../../config/prisma-client';
 import { sendFirebaseNotification } from '../../services/firebase-messaging';
 import { FastifyReply, FastifyRequest, RouteOptions } from 'fastify';
+import isPrismaMissingTable from '../../utils/is-prisma-missing-table';
 
 const notificationSchema = z.object({
   title: z.string().trim().min(1).max(150),
@@ -35,10 +36,20 @@ export default {
       }
     }
 
-    const devices = await prisma.deviceFcmToken.findMany({
-      where: { user_id: req.user.id },
-      select: { token: true },
-    });
+    let devices: Array<{ token: string }>;
+    try {
+      devices = await prisma.deviceFcmToken.findMany({
+        where: { user_id: req.user.id },
+        select: { token: true },
+      });
+    } catch (error) {
+      if (!isPrismaMissingTable(error)) throw error;
+      reply.header('csrf-token', req.csrfProtection.generateCsrf());
+      return reply.status(503).send({
+        status: 503,
+        message: 'O banco das notificações ainda não foi atualizado. Peça ao administrador para concluir a migration com segurança.',
+      });
+    }
     if (devices.length === 0) {
       reply.header('csrf-token', req.csrfProtection.generateCsrf());
       return reply.status(409).send({

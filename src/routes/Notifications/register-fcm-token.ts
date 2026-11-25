@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { FastifyReply, FastifyRequest, RouteOptions } from 'fastify';
 import prisma from '../../config/prisma-client';
 import { hasActiveUserAccess } from '../../utils/user-access';
+import isPrismaMissingTable from '../../utils/is-prisma-missing-table';
 
 const registrationSchema = z.object({
   userId: z.string().trim().min(1).max(128),
@@ -51,7 +52,10 @@ export default {
       });
 
       return reply.status(204).send();
-    } catch {
+    } catch (error) {
+      if (isPrismaMissingTable(error)) {
+        return reply.status(503).send({ status: 503, message: 'O registro FCM ainda não está disponível no banco do painel.' });
+      }
       req.log.error('FCM device registration failed');
       return reply.status(500).send({ status: 500, message: 'Não foi possível registrar o dispositivo.' });
     }
