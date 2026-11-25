@@ -16,6 +16,13 @@ import requests
 import zipfile
 from pathlib import Path
 from xml.sax.saxutils import escape as xml_escape
+
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(line_buffering=True)
+    except (AttributeError, OSError):
+        pass
+
 try:
     from PIL import Image
     HAS_PIL = True
@@ -44,22 +51,18 @@ RUNTIME_FILES = (
 )
 
 def run_command(command: list[str], *, cwd: Path | None = None) -> None:
-    print(f"Executando: {shlex.join(command)}")
+    print(f"Executando: {shlex.join(command)}", flush=True)
     # Garantir que /usr/local/bin está no PATH para encontrar apktool/java
     env = os.environ.copy()
     if "/usr/local/bin" not in env.get("PATH", ""):
         env["PATH"] = f"/usr/local/bin:{env.get('PATH', '')}"
     
     try:
-        completed = subprocess.run(command, cwd=cwd, capture_output=True, text=True, env=env)
+        completed = subprocess.run(command, cwd=cwd, env=env)
     except FileNotFoundError as e:
         raise RuntimeError(f"Ferramenta não encontrada: {command[0]}. Certifique-se de que está instalada e no PATH.") from e
 
     if completed.returncode != 0:
-        # Se falhou, imprimir o erro detalhado para o stderr para o painel capturar
-        err_msg = completed.stderr.strip() if completed.stderr else completed.stdout.strip()
-        if err_msg:
-            print(err_msg, file=sys.stderr)
         raise RuntimeError(f"Erro ao executar {command[0]} (código {completed.returncode})")
 
 def normalize_domain(value: str) -> str:
@@ -548,7 +551,7 @@ def generate_apk(args: argparse.Namespace) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     try:
-        print(f"Decompilando APK base ({base_filename})...")
+        print(f"Decompilando APK base ({base_filename})... Isso pode levar alguns minutos.", flush=True)
         if not getattr(args, "xhttp", False):
             verify_hcr_base(apk_path)
         run_command([*APKTOOL_CMD, "d", "-f", str(apk_path), "-o", str(work_dir)])
@@ -577,7 +580,7 @@ def generate_apk(args: argparse.Namespace) -> Path:
         fix_foreground_service_type(work_dir)
 
         unsigned_apk = output_dir / "unsigned.apk"
-        print("Reconstruindo APK...")
+        print("Reconstruindo APK...", flush=True)
         
         # Detectar versão do apktool para lidar com o parâmetro --use-aapt2
         try:
@@ -601,7 +604,7 @@ def generate_apk(args: argparse.Namespace) -> Path:
         build_cmd.extend([str(work_dir), "-o", str(unsigned_apk)])
         run_command(build_cmd)
 
-        print("Assinando APK...")
+        print("Assinando APK...", flush=True)
         run_command([sys.executable, str(SCRIPT_DIR / "sign_apk.py"), str(unsigned_apk), str(output_dir)])
         signed_apk = output_dir / "signed.apk"
         if not signed_apk.is_file() or signed_apk.stat().st_size == 0:
