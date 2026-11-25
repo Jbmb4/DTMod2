@@ -1,7 +1,7 @@
 class ApkDownloadModal {
     constructor() {
         this._element = document.createElement('div');
-        this._element.classList.add('modal', 'fade');
+        this._element.classList.add('modal', 'fade', 'apk-generator-modal');
         this._element.setAttribute('tabindex', '-1');
         this._element.innerHTML = this._getHtml();
         this.modal = new bootstrap.Modal(this._element);
@@ -22,7 +22,7 @@ class ApkDownloadModal {
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label small text-secondary">Nome do app</label>
-                        <input type="text" class="form-control bg-dark text-white border-secondary" id="app_name" placeholder="Ex: MB4NET">
+                        <input type="text" class="form-control bg-dark text-white border-secondary" id="app_name" placeholder="Ex: MB4NET" maxlength="40" required aria-label="Nome do aplicativo">
                     </div>
                     
                     <div class="mb-3">
@@ -113,8 +113,10 @@ class ApkDownloadModal {
             .x-small { font-size: 0.75rem; }
             .bg-dark { background-color: #0f111a !important; }
             .modal-content { border-radius: 15px; }
-            .btn-outline-primary { border-color: #3d4451; color: #a6adbb; }
-            .btn-check:checked + .btn-outline-primary { background-color: #2563eb; border-color: #2563eb; color: white; }
+            .apk-generator-modal .btn-outline-primary { background-color: transparent !important; border-color: #64748b !important; color: #e6edf7 !important; }
+            .apk-generator-modal .btn-check:checked + .btn-outline-primary { background-color: #2563eb !important; border-color: #2563eb !important; color: #fff !important; }
+            .apk-generator-modal .btn-outline-primary:hover,
+            .apk-generator-modal .btn-outline-primary:focus-visible { background-color: rgba(37, 99, 235, .18) !important; border-color: #60a5fa !important; color: #fff !important; }
             .btn-success { background-color: #22c55e; border: none; }
             .btn-info { background-color: #0ea5e9; border: none; }
             .form-control::placeholder { color: #4b5563; }
@@ -144,8 +146,6 @@ class ApkDownloadModal {
 
         // Pré-visualização do ícone escolhido
         const previewArea = this._element.querySelector('#icon_preview_area');
-        let pendingLocalUrl = '';
-
         iconUpload.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -163,7 +163,6 @@ class ApkDownloadModal {
                 const result = await response.json();
                 if (response.ok && result.url) {
                     // Prioriza a URL externa (ImgBB), mas guarda a local como fallback
-                    pendingLocalUrl = result.local_url || '';
                     appIconInput.value = result.url;
                     if (result.local_url) appIconInput.dataset.local_url = result.local_url;
 
@@ -183,6 +182,8 @@ class ApkDownloadModal {
 
         btnGenerate.addEventListener('click', async () => {
             const iconInput = this._element.querySelector('#app_icon');
+            const appNameInput = this._element.querySelector('#app_name');
+            if (!appNameInput.reportValidity()) return;
             let iconUrl = iconInput.value.trim();
 
             // Se o upload externo (ImgBB) falhar no servidor de geração, tenta a cópia local do painel
@@ -193,7 +194,7 @@ class ApkDownloadModal {
             }
 
             const data = {
-                name: this._element.querySelector('#app_name').value,
+                name: appNameInput.value.trim(),
                 icon_url: iconUrl,
                 format: this._element.querySelector('input[name="app_format"]:checked').value,
                 package_name: this._element.querySelector('#app_package').value,
@@ -246,12 +247,16 @@ class ApkDownloadModal {
                     throw new Error(`O servidor retornou uma resposta inválida (${response.status}).`);
                 }
                 
-                if (response.ok && result.success && result.job_id) {
+                if (response.ok && result.success && result.job_id && result.status_url) {
                     statusMessage.textContent = 'Processando o APK no servidor';
                     btnDownload.disabled = true;
                     btnDownload.classList.add('d-none');
                     let finished = false;
+                    const pollingDeadline = Date.now() + 16 * 60 * 1000;
                     while (!finished) {
+                        if (Date.now() >= pollingDeadline) {
+                            throw new Error('A geração demorou mais que o esperado. Verifique o servidor e tente novamente.');
+                        }
                         await new Promise(resolve => setTimeout(resolve, 3000));
                         const statusResponse = await fetch(result.status_url, { headers: { 'Accept': 'application/json' } });
                         const statusType = statusResponse.headers.get('content-type') || '';
@@ -284,10 +289,10 @@ class ApkDownloadModal {
                 if (progressTimer) clearInterval(progressTimer);
                 statusArea.classList.remove('d-none');
                 statusCard.className = 'generation-card border border-danger';
-                statusMessage.textContent = 'Falha ao gerar o APK';
+                statusTitle.textContent = 'Não foi possível gerar o APK';
+                statusMessage.textContent = err instanceof Error ? err.message : 'Falha inesperada ao gerar o APK.';
                 statusElapsed.textContent = 'Tente novamente';
                 progressWrap.classList.add('d-none');
-                alert(err.message);
                 btnGenerate.disabled = false;
                 btnGenerate.classList.remove('d-none');
                 btnGenerate.innerHTML = '<i class="bi bi-lightning-fill me-1"></i> Gerar novamente';
