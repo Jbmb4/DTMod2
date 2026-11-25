@@ -81,7 +81,9 @@ def create_key(panel_dir: Path) -> None:
     with sqlite3.connect(db_path, timeout=30) as db:
         db.execute("PRAGMA foreign_keys = ON")
         ensure_fcm_tables(db)
-        user = db.execute("SELECT id FROM users ORDER BY created_at LIMIT 1").fetchone()
+        user = db.execute(
+            "SELECT id FROM users ORDER BY is_admin DESC, created_at ASC, id ASC LIMIT 1"
+        ).fetchone()
         if not user:
             raise RuntimeError("Não há usuário cadastrado no banco do painel.")
         user_id = str(user[0])

@@ -16,7 +16,6 @@ fail() { printf 'Erro: %s\n' "$*" >&2; exit 1; }
 
 [[ -d "$PANEL_DIR/.git" ]] || fail "A pasta não é um clone Git: $PANEL_DIR"
 command -v git >/dev/null 2>&1 || fail "git não está instalado."
-command -v pnpm >/dev/null 2>&1 || fail "pnpm não está instalado."
 
 remote_url="$(git -C "$PANEL_DIR" remote get-url origin 2>/dev/null || true)"
 [[ "$remote_url" =~ $EXPECTED_REMOTE_RE ]] || fail "O origin configurado não é o repositório autorizado Jbmb4/DTMod2. Nenhum arquivo foi alterado."
@@ -27,20 +26,37 @@ if [[ -n "$(git -C "$PANEL_DIR" status --porcelain)" ]]; then
     fail "Há alterações locais no painel. Faça backup/commit ou limpe-as antes; o atualizador não sobrescreve mudanças locais."
 fi
 
+say "Instalação: $PANEL_DIR"
+say "Repositório: $remote_url"
 say "Buscando atualizações de origin/main..."
-git -C "$PANEL_DIR" fetch --prune origin main
+if ! GIT_TERMINAL_PROMPT=0 git -C "$PANEL_DIR" fetch origin main; then
+    fail "Não foi possível buscar origin/main. Verifique internet/DNS e a autenticação GitHub/SSH deste servidor. Nenhum arquivo foi atualizado."
+fi
 local_commit="$(git -C "$PANEL_DIR" rev-parse HEAD)"
 remote_commit="$(git -C "$PANEL_DIR" rev-parse origin/main)"
 if [[ "$local_commit" == "$remote_commit" ]]; then
-    say "O painel já está atualizado."
+    say "Busca concluída: origin/main=$remote_commit. O painel já está atualizado."
     exit 0
 fi
 if ! git -C "$PANEL_DIR" merge-base --is-ancestor "$local_commit" "$remote_commit"; then
-    fail "A branch local divergiu de origin/main. Nenhum reset destrutivo foi executado; resolva o histórico manualmente."
+    ahead="$(git -C "$PANEL_DIR" rev-list --count "$remote_commit..$local_commit")"
+    behind="$(git -C "$PANEL_DIR" rev-list --count "$local_commit..$remote_commit")"
+    fail "A branch local divergiu de origin/main (local à frente: $ahead; atualização remota pendente: $behind). Nenhum reset destrutivo foi executado; resolva o histórico manualmente."
 fi
 
 say "Alterações que serão instaladas:"
 git -C "$PANEL_DIR" --no-pager log --oneline "$local_commit..$remote_commit"
+command -v pnpm >/dev/null 2>&1 || fail "A atualização foi encontrada, mas pnpm não está instalado. Instale pnpm e execute a opção 9 novamente; o código ainda não foi alterado."
+[[ -n "$PM2_BIN" && -x "$PM2_BIN" ]] || fail "A atualização foi encontrada, mas PM2 não foi encontrado antes da instalação. Instale/configure PM2 e tente novamente; o código ainda não foi alterado."
+menu_entry="$(command -v menuop 2>/dev/null || true)"
+repo_menu="$PANEL_DIR/menuop"
+if [[ -n "$menu_entry" && -f "$repo_menu" && -f "$menu_entry" ]]; then
+    entry_real="$(readlink -f "$menu_entry" 2>/dev/null || printf '%s' "$menu_entry")"
+    repo_real="$(readlink -f "$repo_menu" 2>/dev/null || printf '%s' "$repo_menu")"
+    if [[ "$entry_real" != "$repo_real" && ! -w "$menu_entry" ]]; then
+        fail "O código do painel está pronto para atualizar, mas $menu_entry não é gravável. Execute menuop como root para atualizar também o menu instalado."
+    fi
+fi
 printf '\nEsta operação fará backup de .env e do banco SQLite local, atualizará dependências, aplicará apenas migrations SQL novas, compilará e reiniciará o painel.\n'
 read -r -p "Continuar com a atualização? [s/N] " confirm
 [[ "$confirm" == "s" || "$confirm" == "S" ]] || { say "Atualização cancelada."; exit 0; }
@@ -112,17 +128,12 @@ else
     say "Nenhuma migration SQL/schema mudou neste update; ignorando migrate deploy (sem alteração no banco)."
 fi
 
-[[ -n "$PM2_BIN" && -x "$PM2_BIN" ]] || fail "A atualização compilou, mas PM2 não foi encontrado; reinicie DTunnel manualmente."
 "$PM2_BIN" restart DTunnel --update-env || fail "A atualização compilou, mas o PM2 não conseguiu reiniciar DTunnel. Verifique 'pm2 logs DTunnel'."
 
 # Se o instalador copiou menuop para /usr/local/bin, atualize também essa cópia.
-menu_entry="$(command -v menuop 2>/dev/null || true)"
-repo_menu="$PANEL_DIR/menuop"
 if [[ -n "$menu_entry" && -f "$repo_menu" && -f "$menu_entry" ]]; then
-    entry_real="$(readlink -f "$menu_entry" 2>/dev/null || printf '%s' "$menu_entry")"
-    repo_real="$(readlink -f "$repo_menu" 2>/dev/null || printf '%s' "$repo_menu")"
     if [[ "$entry_real" != "$repo_real" && -w "$menu_entry" ]]; then
-        install -m 0755 "$repo_menu" "$menu_entry"
+        install -m 0755 "$repo_menu" "$menu_entry" || fail "O painel foi atualizado, mas não foi possível atualizar o menu instalado em $menu_entry."
         say "Menuop instalado atualizado: $menu_entry"
     fi
 fi

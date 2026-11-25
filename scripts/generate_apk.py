@@ -12,7 +12,6 @@ import shlex
 import subprocess
 import sys
 import argparse
-import requests
 import zipfile
 from pathlib import Path
 from xml.sax.saxutils import escape as xml_escape
@@ -297,7 +296,12 @@ def validate_app_name(work_dir: Path, expected_name: str) -> None:
         raise RuntimeError("A validação encontrou um android:label fixo diferente do nome informado; geração interrompida.")
 
 def download_icon(icon_url: str) -> bytes:
-    """Baixa o ícone com retries e User-Agent de navegador, validando que é uma imagem válida."""
+    """Baixa o ícone (com retries e User-Agent de navegador, validando que é uma imagem válida)."""
+    try:
+        import requests
+    except ImportError as error:
+        raise RuntimeError("Instale o pacote Python requests para baixar um ícone personalizado.") from error
+
     if not re.fullmatch(r"https?://[^\s]+", icon_url.strip(), flags=re.IGNORECASE):
         raise ValueError("A URL do ícone deve ser HTTP ou HTTPS.")
 
