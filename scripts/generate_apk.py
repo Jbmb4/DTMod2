@@ -531,9 +531,9 @@ def fix_foreground_service_type(work_dir: Path) -> None:
 def generate_apk(args: argparse.Namespace) -> Path:
     script_dir = Path(__file__).resolve().parent
     panel_dir = script_dir.parent
-    registration_key = os.environ.pop("DTUNNEL_FCM_REGISTRATION_KEY", "")
+    registration_key = os.environ.pop("DTUNNEL_FCM_REGISTRATION_KEY", "") or sys.stdin.read().strip()
     if not registration_key:
-        raise ValueError("Chave individual de registro FCM não informada.")
+        raise ValueError("Chave individual de registro FCM não informada. Atualize o menuop e os scripts do painel.")
     base_filename = "base_xhttp.apk" if getattr(args, "xhttp", False) else "base.apk"
     apk_path = script_dir / base_filename
     work_dir = panel_dir / "apk_work"
