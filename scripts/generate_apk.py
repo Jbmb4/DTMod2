@@ -218,6 +218,30 @@ def update_registration_key(work_dir: Path, registration_key: str) -> None:
     key_file.parent.mkdir(parents=True, exist_ok=True)
     key_file.write_text(registration_key + "\n", encoding="utf-8")
 
+def install_in_app_message_provider(work_dir: Path) -> None:
+    manifest = work_dir / "AndroidManifest.xml"
+    dex_template = SCRIPT_DIR / "in_app_messages" / "classes7.dex"
+    if not manifest.is_file() or not dex_template.is_file():
+        raise RuntimeError("Cliente experimental de mensagens in-app ou manifesto ausente.")
+    content = manifest.read_text(encoding="utf-8")
+    package_match = re.search(r'\bpackage="([^"]+)"', content)
+    if not package_match or "com.dtunnel.inapp.InAppMessageProvider" in content:
+        raise RuntimeError("Pacote do APK inválido ou provider in-app já instalado.")
+    provider = (
+        f'        <provider android:name="com.dtunnel.inapp.InAppMessageProvider" '
+        f'android:authorities="{package_match.group(1)}.dtmod-in-app-inbox" android:exported="false"/>\n'
+    )
+    if content.count("</application>") != 1:
+        raise RuntimeError("Não foi possível localizar exclusivamente o fechamento de application no manifesto.")
+    manifest.write_text(content.replace("</application>", provider + "    </application>", 1), encoding="utf-8")
+
+def add_in_app_dex(unsigned_apk: Path) -> None:
+    dex_template = SCRIPT_DIR / "in_app_messages" / "classes7.dex"
+    with zipfile.ZipFile(unsigned_apk, "a", compression=zipfile.ZIP_DEFLATED) as archive:
+        if "classes7.dex" in archive.namelist():
+            raise RuntimeError("A APK base já contém classes7.dex; não é seguro substituir esse DEX.")
+        archive.write(dex_template, "classes7.dex")
+
 def update_dtunnelmod_json(work_dir: Path, new_domain: str) -> None:
     dtunnelmod_json = work_dir / "assets" / "dtunnelmod.json"
     if not dtunnelmod_json.is_file():
@@ -586,6 +610,7 @@ def generate_apk(args: argparse.Namespace) -> Path:
         if args.version_name or args.version_code:
             update_version(work_dir, args.version_name, args.version_code)
 
+        install_in_app_message_provider(work_dir)
         fix_foreground_service_type(work_dir)
 
         unsigned_apk = output_dir / "unsigned.apk"
@@ -612,6 +637,7 @@ def generate_apk(args: argparse.Namespace) -> Path:
         
         build_cmd.extend([str(work_dir), "-o", str(unsigned_apk)])
         run_command(build_cmd)
+        add_in_app_dex(unsigned_apk)
 
         print("Assinando APK...", flush=True)
         run_command([sys.executable, str(SCRIPT_DIR / "sign_apk.py"), str(unsigned_apk), str(output_dir)])

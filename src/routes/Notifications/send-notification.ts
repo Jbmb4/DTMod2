@@ -2,7 +2,6 @@ import { z } from 'zod';
 import Authentication from '../../middlewares/authentication';
 import csrfProtection from '../../utils/csrf-protection';
 import prisma from '../../config/prisma-client';
-import { sendFirebaseNotification } from '../../services/firebase-messaging';
 import { FastifyReply, FastifyRequest, RouteOptions } from 'fastify';
 import isPrismaMissingTable from '../../utils/is-prisma-missing-table';
 
@@ -36,59 +35,30 @@ export default {
       }
     }
 
-    let devices: Array<{ token: string }>;
     try {
-      devices = await prisma.deviceFcmToken.findMany({
-        where: { user_id: req.user.id },
-        select: { token: true },
+      const notification = await prisma.inAppNotification.create({
+        data: {
+          user_id: req.user.id,
+          title: parsed.data.title,
+          message: parsed.data.message,
+          image_url: parsed.data.imageUrl || null,
+        },
+        select: { id: true, created_at: true },
+      });
+      reply.header('csrf-token', req.csrfProtection.generateCsrf());
+      return reply.send({
+        status: 200,
+        message: 'Mensagem salva para aparecer no aplicativo quando ele estiver aberto e conectado.',
+        id: notification.id,
+        createdAt: notification.created_at,
       });
     } catch (error) {
       if (!isPrismaMissingTable(error)) throw error;
       reply.header('csrf-token', req.csrfProtection.generateCsrf());
       return reply.status(503).send({
         status: 503,
-        message: 'O banco das notificações ainda não foi atualizado. Peça ao administrador para concluir a migration com segurança.',
-      });
-    }
-    if (devices.length === 0) {
-      reply.header('csrf-token', req.csrfProtection.generateCsrf());
-      return reply.status(409).send({
-        status: 409,
-        message: 'Nenhum aparelho está vinculado a esta conta. Abra o aplicativo gerado recentemente e aguarde o registro automático.',
-      });
-    }
-
-    try {
-      const results = await Promise.allSettled(
-        devices.map(({ token }) => sendFirebaseNotification({ ...parsed.data, token }))
-      );
-      const sentCount = results.filter((result) => result.status === 'fulfilled').length;
-      const failedCount = results.length - sentCount;
-      reply.header('csrf-token', req.csrfProtection.generateCsrf());
-
-      if (sentCount === 0) {
-        req.log.warn({ userId: req.user.id, failedCount }, 'FCM delivery failed for all account devices');
-        return reply.status(502).send({ status: 502, message: 'O Firebase não aceitou o envio para os aparelhos desta conta.' });
-      }
-
-      if (failedCount > 0) {
-        req.log.warn({ userId: req.user.id, sentCount, failedCount }, 'FCM delivery partially failed for account devices');
-      }
-      return reply.send({
-        status: 200,
-        message: 'Notificação enviada somente aos aparelhos vinculados a esta conta.',
-        sentCount,
-        failedCount,
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Falha inesperada ao enviar a notificação.';
-      const configurationError =
-        /Configure FIREBASE|credencial Firebase|conta de serviço Firebase|FIREBASE_PROJECT_ID/i.test(message);
-      req.log.warn({ userId: req.user.id }, 'FCM notification send failed');
-      reply.header('csrf-token', req.csrfProtection.generateCsrf());
-      return reply.status(configurationError ? 503 : 502).send({
-        status: configurationError ? 503 : 502,
-        message,
+        message:
+          'A caixa de mensagens ainda não foi instalada no banco. Aplique a migration in_app_notifications antes de enviar.',
       });
     }
   },

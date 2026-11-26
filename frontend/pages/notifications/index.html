@@ -24,24 +24,16 @@
       <div class="content pt-1 overflow-auto">
         <div class="main-content-container container-fluid px-4">
           <div class="mb-3">
-            <h4 class="fw-bold"><i class="bi bi-bell me-2"></i>Enviar notificação</h4>
+            <h4 class="fw-bold"><i class="bi bi-bell me-2"></i>Mensagem no aplicativo</h4>
             <p class="text-secondary mb-2">
-              Envie uma notificação somente aos aparelhos do seu aplicativo vinculados a esta conta.
-              <% if (it.deviceStoreReady) { %>Aparelhos: <%= it.devicesCount %>.<% } else { %>Banco de notificações aguardando a migration segura.<% } %>
+              A mensagem ficará disponível para o aplicativo desta conta e será exibida quando ele estiver aberto e conectado à internet. Não é uma notificação push do Android.
             </p>
             <hr>
           </div>
 
-          <% if (!it.firebaseConfigured) { %>
-          <div class="alert alert-warning" role="status">
-            <strong>Firebase ainda não configurado no servidor.</strong>
-            Configure a chave privada da conta de serviço fora do repositório e defina <code>FIREBASE_SERVICE_ACCOUNT_FILE</code>. Nunca envie o arquivo JSON pelo chat ou faça commit dele.
-          </div>
-          <% } else { %>
           <div class="alert alert-success" role="status">
-            Credencial do Firebase encontrada. O envio fica limitado aos aparelhos desta conta.
+            O app consulta as mensagens usando a chave de registro embutida no APK; o envio é limitado a esta conta.
           </div>
-          <% } %>
 
           <div class="card shadow border border-0">
             <div class="card-body">
@@ -64,8 +56,8 @@
                   <input type="url" class="form-control" id="notificationImage" maxlength="2048" placeholder="https://exemplo.com/imagem.jpg">
                 </div>
                 <div id="notificationResult" class="alert d-none" role="status" aria-live="polite"></div>
-                <button type="submit" class="btn btn-primary" id="sendNotificationButton" <%= it.firebaseConfigured && it.deviceStoreReady && it.devicesCount > 0 ? '' : 'disabled' %>>
-                  <i class="bi bi-send me-1" aria-hidden="true"></i>Enviar notificação
+                <button type="submit" class="btn btn-primary" id="sendNotificationButton">
+                  <i class="bi bi-send me-1" aria-hidden="true"></i>Publicar mensagem
                 </button>
               </form>
             </div>
@@ -87,11 +79,10 @@
     const imagePreview = document.querySelector('#notificationImagePreview');
     const imageUploadStatus = document.querySelector('#notificationImageUploadStatus');
     let csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-    const canSend = <%= it.firebaseConfigured && it.deviceStoreReady && it.devicesCount > 0 ? 'true' : 'false' %>;
     let isImageUploading = false;
 
     const syncSendButton = () => {
-      sendButton.disabled = !canSend || isImageUploading;
+      sendButton.disabled = isImageUploading;
     };
 
     const hideImagePreview = () => {
@@ -172,7 +163,7 @@
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      if (!canSend || !form.reportValidity()) return;
+      if (!form.reportValidity()) return;
       if (isImageUploading) {
         resultBox.className = 'alert alert-warning';
         resultBox.textContent = 'Aguarde o término do envio da imagem.';
@@ -185,12 +176,12 @@
         imageUrl: imageUrlInput.value.trim(),
       };
       const imageConfirmation = payload.imageUrl ? '\nImagem incluída.' : '';
-      const confirmation = `Enviar para ${<%= it.devicesCount %>} aparelho(s) vinculado(s) somente a esta conta?\n\n${payload.title}\n${payload.message}${imageConfirmation}`;
+      const confirmation = `Publicar para os aplicativos gerados nesta conta? A mensagem aparecerá quando o app estiver aberto e conectado.\n\n${payload.title}\n${payload.message}${imageConfirmation}`;
       if (!window.confirm(confirmation)) return;
 
       sendButton.disabled = true;
       resultBox.className = 'alert alert-info';
-      resultBox.textContent = 'Enviando notificação…';
+      resultBox.textContent = 'Salvando mensagem…';
       try {
         const response = await fetch('/notifications/send', {
           method: 'POST',
@@ -201,8 +192,8 @@
         if (refreshedCsrf) csrfToken = refreshedCsrf;
         const result = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(result.message || 'Não foi possível enviar a notificação.');
-        resultBox.className = result.failedCount > 0 ? 'alert alert-warning' : 'alert alert-success';
-        resultBox.textContent = `Notificações enviadas: ${result.sentCount}. Falhas: ${result.failedCount}.`;
+        resultBox.className = 'alert alert-success';
+        resultBox.textContent = result.message || 'Mensagem publicada para aparecer no aplicativo quando ele consultar o painel.';
       } catch (error) {
         resultBox.className = 'alert alert-danger';
         resultBox.textContent = error.message || 'Erro ao enviar notificação.';

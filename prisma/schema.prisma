@@ -30,6 +30,7 @@ model User {
   AppLayout AppLayout[]
   DeviceFcmToken DeviceFcmToken[]
   DeviceRegistrationKey DeviceRegistrationKey[]
+  InAppNotification InAppNotification[]
 
   @@map("users")
 }
@@ -169,4 +170,17 @@ model DeviceRegistrationKey {
 
   @@index([user_id])
   @@map("device_registration_keys")
+}
+
+model InAppNotification {
+  id         Int      @id @default(autoincrement())
+  user_id    String
+  title      String
+  message    String
+  image_url  String?
+  created_at DateTime @default(now())
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([user_id, id])
+  @@map("in_app_notifications")
 }
