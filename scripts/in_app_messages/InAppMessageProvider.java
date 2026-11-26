@@ -3,19 +3,24 @@ package com.dtunnel.inapp;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Application;
-import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.Gravity;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -229,29 +234,69 @@ public final class InAppMessageProvider extends ContentProvider {
                 dialogPending.set(false);
                 return;
             }
-            LinearLayout content = new LinearLayout(activity);
-            content.setOrientation(LinearLayout.VERTICAL);
-            int horizontal = dp(activity, 24);
-            content.setPadding(horizontal, dp(activity, 8), horizontal, dp(activity, 8));
+            LinearLayout card = new LinearLayout(activity);
+            card.setOrientation(LinearLayout.VERTICAL);
+            GradientDrawable cardBackground = new GradientDrawable();
+            cardBackground.setColor(Color.WHITE);
+            cardBackground.setCornerRadius(dp(activity, 20));
+            cardBackground.setStroke(dp(activity, 1), Color.rgb(226, 232, 240));
+            card.setBackground(cardBackground);
+            card.setClipToOutline(true);
+            card.setElevation(dp(activity, 12));
+
+            LinearLayout header = new LinearLayout(activity);
+            header.setGravity(Gravity.CENTER_VERTICAL);
+            header.setOrientation(LinearLayout.HORIZONTAL);
+            header.setPadding(dp(activity, 18), dp(activity, 12), dp(activity, 8), dp(activity, 8));
+            TextView heading = new TextView(activity);
+            heading.setText(title);
+            heading.setTextColor(Color.rgb(17, 24, 39));
+            heading.setTextSize(19f);
+            heading.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+            heading.setMaxLines(2);
+            header.addView(heading, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+            TextView close = new TextView(activity);
+            close.setText("×");
+            close.setTextColor(Color.rgb(75, 85, 99));
+            close.setTextSize(32f);
+            close.setGravity(Gravity.CENTER);
+            close.setContentDescription("Fechar mensagem");
+            close.setMinWidth(dp(activity, 48));
+            close.setMinHeight(dp(activity, 48));
+            header.addView(close, new LinearLayout.LayoutParams(dp(activity, 48), dp(activity, 48)));
+            card.addView(header, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
             if (bitmap != null) {
                 ImageView image = new ImageView(activity);
-                image.setImageDrawable(new BitmapDrawable(activity.getResources(), bitmap));
+                image.setImageBitmap(bitmap);
                 image.setAdjustViewBounds(true);
-                image.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                content.addView(image, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(activity, 220)));
+                image.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, dp(activity, 190));
+                imageParams.setMargins(dp(activity, 14), 0, dp(activity, 14), 0);
+                card.addView(image, imageParams);
             }
             TextView body = new TextView(activity);
             body.setText(message);
+            body.setTextColor(Color.rgb(55, 65, 81));
             body.setTextSize(16f);
-            body.setPadding(0, dp(activity, 12), 0, dp(activity, 8));
-            content.addView(body, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            body.setLineSpacing(dp(activity, 3), 1f);
+            body.setPadding(dp(activity, 18), dp(activity, 12), dp(activity, 18), dp(activity, 20));
+            card.addView(body, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
             ScrollView scroll = new ScrollView(activity);
-            scroll.addView(content);
-            AlertDialog dialog = new AlertDialog.Builder(activity)
-                    .setTitle(title)
-                    .setView(scroll)
-                    .setPositiveButton("Entendi", (d, which) -> {})
-                    .create();
+            scroll.setFillViewport(false);
+            scroll.setBackgroundColor(Color.TRANSPARENT);
+            LinearLayout outer = new LinearLayout(activity);
+            outer.setOrientation(LinearLayout.VERTICAL);
+            outer.setPadding(dp(activity, 16), dp(activity, 18), dp(activity, 16), dp(activity, 12));
+            outer.addView(card, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            scroll.addView(outer);
+
+            Dialog dialog = new Dialog(activity);
+            dialog.setContentView(scroll);
+            dialog.setCancelable(false);
+            dialog.setCanceledOnTouchOutside(false);
             dialog.setOnDismissListener(d -> {
                 long seenId = pendingCursor.getAndSet(0L);
                 if (seenId > cursor) {
@@ -260,8 +305,21 @@ public final class InAppMessageProvider extends ContentProvider {
                 }
                 dialogPending.set(false);
             });
+            close.setOnClickListener(view -> dialog.dismiss());
             try {
                 dialog.show();
+                Window window = dialog.getWindow();
+                if (window != null) {
+                    window.setBackgroundDrawableResource(android.R.color.transparent);
+                    window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+                    WindowManager.LayoutParams params = window.getAttributes();
+                    params.width = WindowManager.LayoutParams.MATCH_PARENT;
+                    params.height = WindowManager.LayoutParams.WRAP_CONTENT;
+                    params.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+                    params.y = dp(activity, 24);
+                    params.dimAmount = 0.18f;
+                    window.setAttributes(params);
+                }
             } catch (Exception ignored) {
                 dialogPending.set(false);
             }
