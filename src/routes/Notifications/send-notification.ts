@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import Authentication from '../../middlewares/authentication';
-import csrfProtection from '../../utils/csrf-protection';
+import csrfProtection from '../../middlewares/csrf-protection';
 import prisma from '../../config/prisma-client';
 import { FastifyReply, FastifyRequest, RouteOptions } from 'fastify';
 import isPrismaMissingTable from '../../utils/is-prisma-missing-table';
