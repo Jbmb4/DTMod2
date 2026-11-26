@@ -237,9 +237,9 @@ public final class InAppMessageProvider extends ContentProvider {
             LinearLayout card = new LinearLayout(activity);
             card.setOrientation(LinearLayout.VERTICAL);
             GradientDrawable cardBackground = new GradientDrawable();
-            cardBackground.setColor(Color.WHITE);
+            cardBackground.setColor(Color.rgb(6, 0, 22));
             cardBackground.setCornerRadius(dp(activity, 20));
-            cardBackground.setStroke(dp(activity, 1), Color.rgb(226, 232, 240));
+            cardBackground.setStroke(dp(activity, 1), Color.rgb(48, 39, 69));
             card.setBackground(cardBackground);
             card.setClipToOutline(true);
             card.setElevation(dp(activity, 12));
@@ -250,14 +250,14 @@ public final class InAppMessageProvider extends ContentProvider {
             header.setPadding(dp(activity, 18), dp(activity, 12), dp(activity, 8), dp(activity, 8));
             TextView heading = new TextView(activity);
             heading.setText(title);
-            heading.setTextColor(Color.rgb(17, 24, 39));
+            heading.setTextColor(Color.WHITE);
             heading.setTextSize(19f);
             heading.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             heading.setMaxLines(2);
             header.addView(heading, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
             TextView close = new TextView(activity);
             close.setText("×");
-            close.setTextColor(Color.rgb(75, 85, 99));
+            close.setTextColor(Color.rgb(221, 214, 239));
             close.setTextSize(32f);
             close.setGravity(Gravity.CENTER);
             close.setContentDescription("Fechar mensagem");
@@ -278,7 +278,7 @@ public final class InAppMessageProvider extends ContentProvider {
             }
             TextView body = new TextView(activity);
             body.setText(message);
-            body.setTextColor(Color.rgb(55, 65, 81));
+            body.setTextColor(Color.rgb(237, 233, 247));
             body.setTextSize(16f);
             body.setLineSpacing(dp(activity, 3), 1f);
             body.setPadding(dp(activity, 18), dp(activity, 12), dp(activity, 18), dp(activity, 20));
