@@ -21,7 +21,8 @@ export default {
     const suppliedKey = req.headers['x-registration-key'];
     const suppliedUserId = req.headers['x-user-id'];
     const rawAfter = (req.query as { after?: string }).after ?? '0';
-    const after = /^\d{1,10}$/.test(rawAfter) ? Number(rawAfter) : NaN;
+    const bootstrap = rawAfter === 'latest';
+    const after = /^\d{1,10}$/.test(rawAfter) ? Number(rawAfter) : bootstrap ? 0 : NaN;
     if (
       typeof suppliedKey !== 'string' ||
       suppliedKey.length < 32 ||
@@ -48,6 +49,14 @@ export default {
         !(await hasActiveUserAccess(keyRecord.user_id))
       ) {
         return reply.status(403).send({ status: 403, message: 'Aplicativo não autorizado ou conta sem acesso ativo.' });
+      }
+
+      if (bootstrap) {
+        const latest = await prisma.inAppNotification.aggregate({
+          where: { user_id: keyRecord.user_id },
+          _max: { id: true },
+        });
+        return reply.send({ notifications: [], nextCursor: latest._max.id ?? 0, hasMore: false });
       }
 
       const rows = await prisma.inAppNotification.findMany({
