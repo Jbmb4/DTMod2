@@ -102,6 +102,10 @@ public final class InAppMessageProvider extends ContentProvider {
                 android.content.SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
                 if (prefs.contains(CURSOR_KEY)) {
                     cursor = prefs.getLong(CURSOR_KEY, 0L);
+                } else if (prefs.contains("cursor")) {
+                    // Carry forward read state from the earliest experimental APK builds.
+                    cursor = prefs.getLong("cursor", 0L);
+                    prefs.edit().putLong(CURSOR_KEY, cursor).commit();
                 } else {
                     // Ignore messages sent before this upgraded client first opened; they are historical backlog.
                     cursor = initializeCursor(panel);
@@ -310,6 +314,16 @@ public final class InAppMessageProvider extends ContentProvider {
             close.setOnClickListener(view -> dialog.dismiss());
             try {
                 dialog.show();
+                // A message is consumed once it has actually been presented, even if the app
+                // is closed or upgraded before the user taps X.
+                long seenId = pendingCursor.getAndSet(0L);
+                if (seenId > cursor) {
+                    cursor = seenId;
+                    context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                            .putLong(CURSOR_KEY, cursor)
+                            .putLong("cursor", cursor)
+                            .commit();
+                }
                 Window window = dialog.getWindow();
                 if (window != null) {
                     window.setBackgroundDrawableResource(android.R.color.transparent);
