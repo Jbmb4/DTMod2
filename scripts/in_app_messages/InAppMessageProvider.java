@@ -251,7 +251,7 @@ public final class InAppMessageProvider extends ContentProvider {
             TextView heading = new TextView(activity);
             heading.setText(title);
             heading.setTextColor(Color.WHITE);
-            heading.setTextSize(19f);
+            heading.setTextSize(21f);
             heading.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             heading.setMaxLines(2);
             header.addView(heading, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
@@ -270,16 +270,18 @@ public final class InAppMessageProvider extends ContentProvider {
                 ImageView image = new ImageView(activity);
                 image.setImageBitmap(bitmap);
                 image.setAdjustViewBounds(true);
-                image.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                image.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                image.setBackgroundColor(Color.rgb(6, 0, 22));
+                int imageWidth = activity.getResources().getDisplayMetrics().widthPixels - dp(activity, 32);
+                int imageHeight = Math.round(imageWidth * 9f / 16f);
                 LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT, dp(activity, 190));
-                imageParams.setMargins(dp(activity, 14), 0, dp(activity, 14), 0);
+                        ViewGroup.LayoutParams.MATCH_PARENT, imageHeight);
                 card.addView(image, imageParams);
             }
             TextView body = new TextView(activity);
             body.setText(message);
             body.setTextColor(Color.rgb(237, 233, 247));
-            body.setTextSize(16f);
+            body.setTextSize(18f);
             body.setLineSpacing(dp(activity, 3), 1f);
             body.setPadding(dp(activity, 18), dp(activity, 12), dp(activity, 18), dp(activity, 20));
             card.addView(body, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
